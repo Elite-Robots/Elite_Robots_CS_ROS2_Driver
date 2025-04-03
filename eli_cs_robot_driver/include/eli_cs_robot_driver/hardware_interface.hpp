@@ -21,7 +21,7 @@
 #include <hardware_interface/types/hardware_interface_return_values.hpp>
 
 #include <Elite/EliteDriver.hpp>
-#include <Elite/RtsiIOInterface.hpp>
+#include <Elite/RtsiClientInterface.hpp>
 
 namespace ELITE_CS_ROBOT_ROS_DRIVER {
 
@@ -62,7 +62,9 @@ public:
 
 protected:
     std::unique_ptr<ELITE::EliteDriver> eli_driver_;
-    std::unique_ptr<ELITE::RtsiIOInterface> rtsi_;
+    std::unique_ptr<ELITE::RtsiClientInterface> rtsi_interface_;
+    ELITE::RtsiRecipeSharedPtr rtsi_out_recipe_;
+    ELITE::RtsiRecipeSharedPtr rtsi_in_recipe_;
     std::unique_ptr<std::thread> async_thread_;
     bool async_thread_alive_;
     ELITE::TaskStatus runtime_state_;
@@ -153,9 +155,17 @@ protected:
     geometry_msgs::msg::TransformStamped tcp_transform_;
 
     void asyncThread();
-    void checkAsyncIO();
+    void updateAsyncIO();
+    bool updateStandardIO(bool *is_update);
+    bool updateConfigIO(bool *is_update);
+    bool updateToolDigital(bool *is_update);
+    bool updateStandardAnalog(bool *is_update);
+    bool updateToolVoltage(bool *is_update);
+
     void extractToolPose();
     void transformForceTorque();
+    bool rtsiInit(const std::string& ip, const std::string& output_file, const std::string& input_file);
+    std::vector<std::string> readRecipe(const std::string& recipe_file);
 };
 }  // namespace ELITE_CS_ROBOT_ROS_DRIVER
 

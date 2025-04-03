@@ -27,7 +27,7 @@ MODE_POSE = 5
 MODE_FREEDRIVE = 6
 MODE_TOOL_IN_CONTACT = 7
 
-STOPJ_ACCELERATION = 4.0
+STOPJ_ACCELERATION = {{STOP_J_REPLACE}}
 
 SERVO_UNINITIALIZED = -1
 SERVO_IDLE = 0
@@ -44,6 +44,9 @@ REVERSE_DATA_SIZE = {{REVERSE_DATA_SIZE_REPLACE}}
 TRAJECTORY_DATA_SIZE = {{TRAJECTORY_DATA_SIZE_REPLACE}}
 SCRIPT_COMMAND_DATA_SIZE = {{SCRIPT_COMMAND_DATA_SIZE_REPLACE}}
 
+# Any motion commands resulting in a velocity higher than that will be ignored.
+JOINT_IGNORE_SPEED = 15.0
+
 #Global variables are also showed in the Teach pendants variable list
 global control_mode
 global cmd_speedl_tool_speed
@@ -52,6 +55,41 @@ global steptime
 global trajectory_point_num
 global cmd_servo_state, cmd_servo_joints_last, cmd_servo_joints
 global extrapolate_max_count, extrapolate_count
+global violation_popup_counter
+
+"""
+@brief Function to verify whether the specified target can be reached within the defined time frame while staying within the robot's speed limits
+
+@param step_start array is the joint target to start
+@param step_end array is the joint target to reach
+@param time float is the time to reach the target
+
+@returns bool true if the target is reachable within the robot's speed limits, false otherwise
+"""
+def targetWithinLimits(step_start, step_end, time):
+    global violation_popup_counter
+    for i in range(6):
+        velocity = norm(step_end[i] - step_start[i]) / time
+        if velocity > JOINT_IGNORE_SPEED:
+            str_msg = "Velocity {}  required in joint {}  to go from {} to {}  within {} seconds \
+                       is exceeding the joint velocity limits. \
+                       Ignoring commands until a valid command is received.".format(velocity, i, step_start[i], step_end[i], time)
+            if violation_popup_counter == 0:
+                # We want a popup when an invalid commant is sent. As long as we keep sending invalid
+                # commands, we do not want to repeat the popup.
+                popup(str_msg, title="External Control speed limit", blocking=False, warning=True)
+            if violation_popup_counter * get_steptime() % 5.0 == 0:
+                # We want to have a log printed regularly. We are receiving motion commands that are not
+                # feasible. The user should have a chance to know about this.
+                textmsg(str_msg)
+                textmsg("start configuration: ", step_start)
+                textmsg("end   configuration: ", step_end)
+            violation_popup_counter += 1
+            return False
+    if violation_popup_counter > 0:
+        textmsg("Received valid position. Resuming execution.")
+        violation_popup_counter = 0
+    return True
 
 def trajectoryThread():
     global trajectory_point_num
@@ -81,15 +119,24 @@ def trajectoryThread():
 def setServoSetpoint(joints):
     global cmd_servo_state, cmd_servo_joints_last, cmd_servo_joints
     cmd_servo_state = SERVO_RUNNING
-    cmd_servo_joints_last = cmd_servo_joints
-    cmd_servo_joints = joints
+    if targetWithinLimits(cmd_servo_joints, joints, steptime):
+        cmd_servo_joints_last = cmd_servo_joints
+        cmd_servo_joints = joints
+    # If the target has been interpolating too far away from the robot, so it would trigger the limit
+    # check, but the target is close to where the robot currently is, also accept the command.
+    # This can, for example, happen if a command series was too fast for the robot to follow, which
+    # triggers a path deviation on the commanding side and that is mitigated by a hold-position
+    # command.
+    elif targetWithinLimits(get_actual_joint_positions(), joints, steptime):
+        cmd_servo_joints_last = cmd_servo_joints
+        cmd_servo_joints = joints
 
 def extrapolate():
     global cmd_servo_joints_last, cmd_servo_joints
-    diff = [cmd_servo_joints[0] - cmd_servo_joints_last[0], cmd_servo_joints[1] - cmd_servo_joints_last[1], cmd_servo_joints[2] - cmd_servo_joints_last[2], cmd_servo_joints[3] - cmd_servo_joints_last[3], cmd_servo_joints[4] - cmd_servo_joints_last[4], cmd_servo_joints[5] - cmd_servo_joints_last[5]]
     cmd_servo_joints_last = cmd_servo_joints
-    cmd_servo_joints = [cmd_servo_joints[0] + diff[0], cmd_servo_joints[1] + diff[1], cmd_servo_joints[2] + diff[2], cmd_servo_joints[3] + diff[3], cmd_servo_joints[4] + diff[4], cmd_servo_joints[5] + diff[5]]
-
+    target_speed = get_target_joint_speeds()
+    for i in range(len(target_speed)):
+        cmd_servo_joints[i] = cmd_servo_joints[i] + (target_speed[i] * steptime)
     return cmd_servo_joints
 
 def servoThread():
@@ -208,6 +255,7 @@ script_command_thread_handle = start_thread(scriptCommands, ())
 move_thread_handle = 0
 trajectory_thread_handle = 0
 read_timeout = 0.0 # First read is blocking
+violation_popup_counter = 0
 
 while control_mode > MODE_STOPPED:
     params_mult = socket_read_binary_integer(REVERSE_DATA_SIZE, "reverse_socket", read_timeout)
@@ -240,6 +288,7 @@ while control_mode > MODE_STOPPED:
             elif control_mode == MODE_SPEEDJ:
                 move_thread_handle = start_thread(speedjThread, ())
             elif control_mode == MODE_SERVOJ:
+                cmd_servo_joints = get_actual_joint_positions()
                 move_thread_handle = start_thread(servoThread, ())
             
         # Update the motion commands with new parameters
@@ -277,6 +326,7 @@ stopj(STOPJ_ACCELERATION)
 textmsg("ExternalControl: All threads ended")
 socket_close("reverse_socket")
 socket_close("trajectory_socket")
+socket_close("script_command_socket")
 
 
 # NODE_CONTROL_LOOP_ENDS
