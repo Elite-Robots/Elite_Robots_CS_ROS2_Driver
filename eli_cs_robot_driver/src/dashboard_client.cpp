@@ -34,6 +34,8 @@ DashboardClient::DashboardClient(const rclcpp::NodeOptions& options) : Node("das
 
     quit_service_ = createTriggerService("~/quit", [&]()->bool{ client_.quit(); return true; });
 
+    safety_system_restart_service_ = createTriggerService("~/restart_safety", [&]()->bool{ return client_.safetySystemRestart(); });
+
     popup_service_ = this->create_service<eli_dashboard_interface::srv::Popup>(
         "~/popup",
         [&](const eli_dashboard_interface::srv::Popup::Request::SharedPtr req,
@@ -183,6 +185,17 @@ DashboardClient::DashboardClient(const rclcpp::NodeOptions& options) : Node("das
                 resp->message = e.what();
             }
         });
+    
+    custom_request_service_ = this->create_service<eli_dashboard_interface::srv::CustomRequest>(
+        "~/custom_request", [&](const eli_dashboard_interface::srv::CustomRequest::Request::SharedPtr req,
+                             eli_dashboard_interface::srv::CustomRequest::Response::SharedPtr resp) {
+            try {
+                resp->response = client_.sendAndReceive(req->request);
+            } catch(const ELITE::EliteException& e) {
+                resp->response = e.what();
+            }
+        }
+    );
 }
 
 DashboardClient::~DashboardClient() {}
