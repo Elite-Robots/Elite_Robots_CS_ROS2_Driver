@@ -119,6 +119,12 @@ Loaded the task file in accordance with the path.
 #### *connect*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
 Connect to robot.
 
+#### *restart_safety*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
+Restart robot safety system.
+
+#### *custom_request*[(eli_dashboard_interface/srv/CustomRequest)](/eli_dashboard_interface/srv/CustomRequest.srv)
+Send custom request and receive robot response
+
 ## GPIO Controller
 The controller provide ditital IO publisher, tool data publisher and the like. Also provide service which can set robot IO state.
 

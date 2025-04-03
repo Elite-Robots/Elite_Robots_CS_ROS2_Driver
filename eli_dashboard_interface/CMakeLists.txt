@@ -27,6 +27,7 @@ rosidl_generate_interfaces(
   "srv/Popup.srv"
   "srv/Log.srv"
   "srv/IsSaved.srv"
+  "srv/CustomRequest.srv"
 )
 
 ament_package()
