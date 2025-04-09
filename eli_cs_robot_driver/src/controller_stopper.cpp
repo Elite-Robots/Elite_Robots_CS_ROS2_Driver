@@ -24,18 +24,43 @@ ControllerStopper::ControllerStopper(const rclcpp::Node::SharedPtr& node, bool s
         "controller_manager/"
         "list_controllers");
 
+    // Get robot mode from dashboard
+    dashboard_robot_mode_srv_ = node->create_client<eli_common_interface::srv::GetRobotMode>("dashboard_client/robot_mode");
+
+    // Wait "controller_manager/switch_controller"
     RCLCPP_INFO(rclcpp::get_logger("Controller stopper"),
                 "Waiting for switch controller service to come up on "
                 "controller_manager/switch_controller");
     controller_manager_srv_->wait_for_service();
     RCLCPP_INFO(rclcpp::get_logger("Controller stopper"), "Service available");
+
+    // Wait "controller_manager/list_controllers"
     RCLCPP_INFO(rclcpp::get_logger("Controller stopper"),
                 "Waiting for list controllers service to come up on "
                 "controller_manager/list_controllers");
     controller_list_srv_->wait_for_service();
     RCLCPP_INFO(rclcpp::get_logger("Controller stopper"), "Service available");
 
+    // Wait "dashboard_client/robot_mode"
+    RCLCPP_INFO(rclcpp::get_logger("Controller stopper"),
+                "Waiting for robot mode(dashboard) service to come up on "
+                "dashboard_client/robot_mode");
+    dashboard_robot_mode_srv_->wait_for_service();
+    RCLCPP_INFO(rclcpp::get_logger("Controller stopper"), "Service available");
+
     consistent_controllers_ = node_->declare_parameter<std::vector<std::string>>("consistent_controllers");
+
+    // Get robot mode and if robot is power off, stop controller on startup
+    auto robot_mode_request = std::make_shared<eli_common_interface::srv::GetRobotMode::Request>();
+    auto robot_mode_response = dashboard_robot_mode_srv_->async_send_request(robot_mode_request);
+    rclcpp::spin_until_future_complete(node_, robot_mode_response);
+    auto robot_mode = robot_mode_response.get()->mode.mode;
+    if (robot_mode != eli_common_interface::msg::RobotMode::POWER_ON &&
+        robot_mode != eli_common_interface::msg::RobotMode::IDLE &&
+        robot_mode != eli_common_interface::msg::RobotMode::RUNNING) {
+            stop_controllers_on_startup_ = true;
+            RCLCPP_INFO(rclcpp::get_logger("Controller stopper"), "Robot mode: %d. Must stop controllers", robot_mode);
+    }
 
     if (stop_controllers_on_startup_ == true) {
         while (stopped_controllers_.empty()) {

@@ -1,14 +1,16 @@
 #ifndef __ELITE_CS_ROBOT_ROS_DRIVER__CONTROLLER_STOPPER_HPP__
 #define __ELITE_CS_ROBOT_ROS_DRIVER__CONTROLLER_STOPPER_HPP__
 
+#include "eli_common_interface/srv/get_robot_mode.hpp"
+
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "controller_manager_msgs/srv/list_controllers.hpp"
-#include "controller_manager_msgs/srv/switch_controller.hpp"
-#include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/bool.hpp"
+#include <controller_manager_msgs/srv/list_controllers.hpp>
+#include <controller_manager_msgs/srv/switch_controller.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/bool.hpp>
 
 class ControllerStopper {
    public:
@@ -37,6 +39,7 @@ class ControllerStopper {
     std::shared_ptr<rclcpp::Node> node_;
     rclcpp::Client<controller_manager_msgs::srv::SwitchController>::SharedPtr controller_manager_srv_;
     rclcpp::Client<controller_manager_msgs::srv::ListControllers>::SharedPtr controller_list_srv_;
+    rclcpp::Client<eli_common_interface::srv::GetRobotMode>::SharedPtr dashboard_robot_mode_srv_;
 
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr robot_running_sub_;
 
