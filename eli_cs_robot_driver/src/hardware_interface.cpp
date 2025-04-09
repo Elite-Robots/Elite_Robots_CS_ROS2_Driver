@@ -521,10 +521,10 @@ hardware_interface::return_type EliteCSPositionHardwareInterface::read(const rcl
     uint32_t robot_status = 0;
     rtsi_out_recipe_->getValue("robot_status_bits", robot_status);
     std::bitset<4> robot_status_bits = robot_status;
-    robot_status_bits_copy_[0] = robot_status_bits[0];
-    robot_status_bits_copy_[1] = robot_status_bits[1];
-    robot_status_bits_copy_[2] = robot_status_bits[2];
-    robot_status_bits_copy_[3] = robot_status_bits[3];
+    robot_status_bits_copy_[0] = robot_status_bits[0]; // is power on
+    robot_status_bits_copy_[1] = robot_status_bits[1]; // is program running
+    robot_status_bits_copy_[2] = robot_status_bits[2]; // is freedrive button pressed
+    robot_status_bits_copy_[3] = robot_status_bits[3]; // no use
 
     uint32_t safety_status = 0;
     rtsi_out_recipe_->getValue("robot_status_bits", robot_status);
