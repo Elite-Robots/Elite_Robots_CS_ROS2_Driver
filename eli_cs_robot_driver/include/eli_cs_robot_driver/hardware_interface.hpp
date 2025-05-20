@@ -2,6 +2,7 @@
 #define __ELITE_CS_ROBOT_ROS_DRIVER__HARDWARE_INTERFACE_HPP__
 
 // System
+#include <algorithm>
 #include <limits>
 #include <memory>
 #include <string>
@@ -25,19 +26,15 @@
 
 namespace ELITE_CS_ROBOT_ROS_DRIVER {
 
-enum StoppingInterface
-{
-  NONE,
-  STOP_POSITION,
-  STOP_VELOCITY
-};
+// Other command mode
+constexpr char ELITE_HW_IF_FREEDRIVE[] = "freedrive_mode";
 
 /**
  * @brief Handles the interface between the ROS system and the main driver.
  *
  */
 class EliteCSPositionHardwareInterface : public hardware_interface::SystemInterface {
-public:
+   public:
     RCLCPP_SHARED_PTR_DEFINITIONS(EliteCSPositionHardwareInterface)
     virtual ~EliteCSPositionHardwareInterface();
 
@@ -60,7 +57,7 @@ public:
     hardware_interface::return_type perform_command_mode_switch(const std::vector<std::string>& start_interfaces,
                                                                 const std::vector<std::string>& stop_interfaces) final;
 
-protected:
+   protected:
     std::unique_ptr<ELITE::EliteDriver> eli_driver_;
     std::unique_ptr<ELITE::RtsiClientInterface> rtsi_interface_;
     ELITE::RtsiRecipeSharedPtr rtsi_out_recipe_;
@@ -69,8 +66,8 @@ protected:
     bool async_thread_alive_;
     ELITE::TaskStatus runtime_state_;
     // resources switching aux vars
-    std::vector<uint> stop_modes_;
-    std::vector<std::string> start_modes_;
+    std::vector<std::vector<std::string>> stop_modes_;
+    std::vector<std::vector<std::string>> start_modes_;
     bool position_controller_running_;
     bool velocity_controller_running_;
     bool controllers_initialized_;
@@ -108,7 +105,7 @@ protected:
     double tool_output_voltage_copy_;
     double tool_output_current_;
     double tool_temperature_;
-    
+
     // copy of non double values
     std::array<double, STANDARD_DIG_GPIO_NUM> standard_dig_out_;
     std::array<double, STANDARD_DIG_GPIO_NUM> standard_dig_in_;
@@ -149,6 +146,13 @@ protected:
     double zero_ftsensor_cmd_;
     double zero_ftsensor_async_success_;
 
+    // Freedrive interface values
+    bool freedrive_activated_;
+    bool freedrive_controller_running_;
+    double freedrive_async_success_;
+    double freedrive_start_cmd_;
+    double freedrive_end_cmd_;
+
     // transform stuff
     tf2::Vector3 tcp_force_;
     tf2::Vector3 tcp_torque_;
@@ -156,16 +160,26 @@ protected:
 
     void asyncThread();
     void updateAsyncIO();
-    bool updateStandardIO(bool *is_update);
-    bool updateConfigIO(bool *is_update);
-    bool updateToolDigital(bool *is_update);
-    bool updateStandardAnalog(bool *is_update);
-    bool updateToolVoltage(bool *is_update);
+    bool updateStandardIO(bool* is_update);
+    bool updateConfigIO(bool* is_update);
+    bool updateToolDigital(bool* is_update);
+    bool updateStandardAnalog(bool* is_update);
+    bool updateToolVoltage(bool* is_update);
 
     void extractToolPose();
     void transformForceTorque();
     bool rtsiInit(const std::string& ip, const std::string& output_file, const std::string& input_file);
     std::vector<std::string> readRecipe(const std::string& recipe_file);
+
+    template <const char*... Args>
+    bool containsAnyOfString(const std::vector<std::string>& input) {
+        return std::any_of(input.begin(), input.end(), [&](const std::string& item) { return ((item == Args) || ...); });
+    }
+
+    template <typename T>
+    void removeVectorElements(std::vector<T>& vec, const T& key) {
+        vec.erase(std::remove_if(vec.begin(), vec.end(), [&](const T& item) { return item == key; }), vec.end());
+    }
 };
 }  // namespace ELITE_CS_ROBOT_ROS_DRIVER
 
