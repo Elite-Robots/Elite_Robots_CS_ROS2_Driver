@@ -1,17 +1,17 @@
 #include "eli_cs_robot_driver/hardware_interface.hpp"
-#include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include <Elite/EliteException.hpp>
 #include <algorithm>
+#include <bitset>
+#include <chrono>
+#include <cstring>
+#include <fstream>
 #include <memory>
+#include <rclcpp/rclcpp.hpp>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
-#include <bitset>
-#include <rclcpp/rclcpp.hpp>
-#include <chrono>
-#include <fstream>
-#include <sstream>
-#include <cstring>
+#include "hardware_interface/types/hardware_interface_type_values.hpp"
 
 namespace ELITE_CS_ROBOT_ROS_DRIVER {
 
@@ -38,8 +38,7 @@ hardware_interface::CallbackReturn EliteCSPositionHardwareInterface::on_init(con
     tcp_pose_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
     position_commands_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
     velocity_commands_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
-    stop_modes_ = {StoppingInterface::NONE, StoppingInterface::NONE, StoppingInterface::NONE,
-                   StoppingInterface::NONE, StoppingInterface::NONE, StoppingInterface::NONE};
+    stop_modes_ = {};
     start_modes_ = {};
     position_controller_running_ = false;
     velocity_controller_running_ = false;
@@ -49,6 +48,10 @@ hardware_interface::CallbackReturn EliteCSPositionHardwareInterface::on_init(con
     resend_external_script_cmd_ = NO_NEW_CMD;
     is_robot_connected_ = false;
     is_last_power_on_ = false;
+
+    // Freedrive interface values init
+    freedrive_controller_running_ = false;
+    freedrive_end_cmd_ = 0;
 
     for (size_t i = 0; i < STANDARD_DIG_GPIO_NUM; i++) {
         standard_dig_out_bits_cmd_[i] = NO_NEW_CMD;
@@ -117,11 +120,11 @@ hardware_interface::CallbackReturn EliteCSPositionHardwareInterface::on_init(con
 std::vector<hardware_interface::StateInterface> EliteCSPositionHardwareInterface::export_state_interfaces() {
     std::vector<hardware_interface::StateInterface> state_interfaces;
     for (size_t i = 0; i < info_.joints.size(); ++i) {
-        state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_POSITION,
-                                                                         &joint_positions_[i]));
+        state_interfaces.emplace_back(
+            hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_POSITION, &joint_positions_[i]));
 
-        state_interfaces.emplace_back(hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_VELOCITY,
-                                                                         &joint_velocities_[i]));
+        state_interfaces.emplace_back(
+            hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &joint_velocities_[i]));
 
         state_interfaces.emplace_back(
             hardware_interface::StateInterface(info_.joints[i].name, hardware_interface::HW_IF_EFFORT, &joint_efforts_[i]));
@@ -141,37 +144,31 @@ std::vector<hardware_interface::StateInterface> EliteCSPositionHardwareInterface
         }
     }
 
-
     for (size_t i = 0; i < STANDARD_DIG_GPIO_NUM; i++) {
-        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "standard_digital_output_" + std::to_string(i),
-                                                                         &standard_dig_out_[i]));
-        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "standard_digital_input_" + std::to_string(i),
-                                                                         &standard_dig_in_[i]));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(
+            tf_prefix + "gpio", "standard_digital_output_" + std::to_string(i), &standard_dig_out_[i]));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(
+            tf_prefix + "gpio", "standard_digital_input_" + std::to_string(i), &standard_dig_in_[i]));
     }
 
     for (size_t i = 0; i < CONF_DIG_GPIO_NUM; i++) {
-        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio",
-                                                                         "configure_digital_output_" + std::to_string(i),
-                                                                         &config_dig_out_[i]));
-        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio",
-                                                                         "configure_digital_input_" + std::to_string(i),
-                                                                         &config_dig_in_[i]));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(
+            tf_prefix + "gpio", "configure_digital_output_" + std::to_string(i), &config_dig_out_[i]));
+        state_interfaces.emplace_back(hardware_interface::StateInterface(
+            tf_prefix + "gpio", "configure_digital_input_" + std::to_string(i), &config_dig_in_[i]));
     }
 
     for (size_t i = 0; i < TOOL_DIG_GPIO_NUM; i++) {
-        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio",
-                                                                         "tool_digital_output_" + std::to_string(i),
-                                                                         &tool_dig_out_[i]));
-        state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio",
-                                                                         "tool_digital_input_" + std::to_string(i),
-                                                                         &tool_dig_in_[i]));
+        state_interfaces.emplace_back(
+            hardware_interface::StateInterface(tf_prefix + "gpio", "tool_digital_output_" + std::to_string(i), &tool_dig_out_[i]));
+        state_interfaces.emplace_back(
+            hardware_interface::StateInterface(tf_prefix + "gpio", "tool_digital_input_" + std::to_string(i), &tool_dig_in_[i]));
     }
 
     for (size_t i = 0; i < SAFETY_STATUS_BITS_NUM; i++) {
         state_interfaces.emplace_back(hardware_interface::StateInterface(
             tf_prefix + "gpio", "safety_status_bit_" + std::to_string(i), &safety_status_bits_copy_[i]));
     }
-
 
     for (size_t i = 0; i < ROBOT_STATUS_BITS_NUM; i++) {
         state_interfaces.emplace_back(hardware_interface::StateInterface(
@@ -181,7 +178,7 @@ std::vector<hardware_interface::StateInterface> EliteCSPositionHardwareInterface
     for (size_t i = 0; i < STANARD_ANALOG_IO_NUM; i++) {
         state_interfaces.emplace_back(hardware_interface::StateInterface(
             tf_prefix + "gpio", "standard_analog_input_type_" + std::to_string(i), &standard_analog_input_types_[i]));
-            state_interfaces.emplace_back(hardware_interface::StateInterface(
+        state_interfaces.emplace_back(hardware_interface::StateInterface(
             tf_prefix + "gpio", "standard_analog_input_" + std::to_string(i), &standard_analog_input_[i]));
 
         state_interfaces.emplace_back(hardware_interface::StateInterface(
@@ -190,17 +187,16 @@ std::vector<hardware_interface::StateInterface> EliteCSPositionHardwareInterface
             tf_prefix + "gpio", "standard_analog_output_type_" + std::to_string(i), &standard_analog_output_types_[i]));
     }
 
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-            tf_prefix + "gpio", "tool_analog_input_type", &tool_analog_input_type_copy_));
-    
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-            tf_prefix + "gpio", "tool_analog_output_type", &tool_analog_output_type_copy_));
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface(tf_prefix + "gpio", "tool_analog_input_type", &tool_analog_input_type_copy_));
 
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-            tf_prefix + "gpio", "tool_analog_input", &tool_analog_input_));
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface(tf_prefix + "gpio", "tool_analog_output_type", &tool_analog_output_type_copy_));
 
-    state_interfaces.emplace_back(hardware_interface::StateInterface(
-            tf_prefix + "gpio", "tool_analog_output", &tool_analog_output_));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "gpio", "tool_analog_input", &tool_analog_input_));
+
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface(tf_prefix + "gpio", "tool_analog_output", &tool_analog_output_));
 
     state_interfaces.emplace_back(
         hardware_interface::StateInterface(tf_prefix + "gpio", "tool_output_voltage", &tool_output_voltage_copy_));
@@ -228,11 +224,11 @@ std::vector<hardware_interface::StateInterface> EliteCSPositionHardwareInterface
 std::vector<hardware_interface::CommandInterface> EliteCSPositionHardwareInterface::export_command_interfaces() {
     std::vector<hardware_interface::CommandInterface> command_interfaces;
     for (size_t i = 0; i < info_.joints.size(); ++i) {
-        command_interfaces.emplace_back(hardware_interface::CommandInterface(
-            info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_commands_[i]));
+        command_interfaces.emplace_back(
+            hardware_interface::CommandInterface(info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_commands_[i]));
 
-        command_interfaces.emplace_back(hardware_interface::CommandInterface(
-            info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_commands_[i]));
+        command_interfaces.emplace_back(
+            hardware_interface::CommandInterface(info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &velocity_commands_[i]));
     }
     // Obtain the tf_prefix from the urdf so that we can have the general interface multiple times
     // NOTE using the tf_prefix at this point is some kind of workaround. One should actually go through the list of gpio
@@ -248,8 +244,8 @@ std::vector<hardware_interface::CommandInterface> EliteCSPositionHardwareInterfa
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         tf_prefix + "speed_scaling", "target_speed_fraction_async_success", &scaling_async_success_));
 
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "resend_external_script",
-                                                                         "resend_external_script_cmd", &resend_external_script_cmd_));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        tf_prefix + "resend_external_script", "resend_external_script_cmd", &resend_external_script_cmd_));
 
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         tf_prefix + "resend_external_script", "resend_external_script_async_success", &resend_external_script_async_success_));
@@ -283,7 +279,6 @@ std::vector<hardware_interface::CommandInterface> EliteCSPositionHardwareInterfa
         command_interfaces.emplace_back(hardware_interface::CommandInterface(
             tf_prefix + "gpio", "tool_digital_output_cmd_" + std::to_string(i), &tool_dig_out_bits_cmd_[i]));
     }
-    
 
     for (size_t i = 0; i < STANARD_ANALOG_IO_NUM; ++i) {
         command_interfaces.emplace_back(hardware_interface::CommandInterface(
@@ -301,6 +296,15 @@ std::vector<hardware_interface::CommandInterface> EliteCSPositionHardwareInterfa
     command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "zero_ftsensor", "zero_ftsensor_async_success",
                                                                          &zero_ftsensor_async_success_));
 
+    command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(tf_prefix + "freedrive_mode", "freedrive_async_success", &freedrive_async_success_));
+
+    command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(tf_prefix + "freedrive_mode", "freedrive_start_cmd", &freedrive_start_cmd_));
+
+    command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(tf_prefix + "freedrive_mode", "freedrive_end_cmd", &freedrive_end_cmd_));
+
     return command_interfaces;
 }
 
@@ -317,7 +321,7 @@ hardware_interface::CallbackReturn EliteCSPositionHardwareInterface::on_configur
     // Path to the file containing the recipe used for requesting RTSI inputs.
     const std::string input_recipe_filename = info_.hardware_parameters["input_recipe_filename"];
     // Start robot in headless mode. This does not require the 'External Control' EliteCOs to be running
-    // on the robot, but this will send the script to the robot directly. This requires the robot to 
+    // on the robot, but this will send the script to the robot directly. This requires the robot to
     // run in 'remote-control' mode.
     const bool headless_mode =
         (info_.hardware_parameters["headless_mode"] == "true") || (info_.hardware_parameters["headless_mode"] == "True");
@@ -380,9 +384,7 @@ hardware_interface::CallbackReturn EliteCSPositionHardwareInterface::on_configur
     recv_timeout_ = std::stof(info_.hardware_parameters["robot_receive_timeout"]);
 
     async_thread_alive_ = true;
-    async_thread_ = std::make_unique<std::thread>([&](){
-        asyncThread();
-    });
+    async_thread_ = std::make_unique<std::thread>([&]() { asyncThread(); });
 
     RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "System successfully started!");
 
@@ -435,19 +437,20 @@ std::vector<std::string> EliteCSPositionHardwareInterface::readRecipe(const std:
     return recipe;
 }
 
-bool EliteCSPositionHardwareInterface::rtsiInit(const std::string& ip, const std::string& output_file, const std::string& input_file) {
+bool EliteCSPositionHardwareInterface::rtsiInit(const std::string& ip, const std::string& output_file,
+                                                const std::string& input_file) {
     rtsi_interface_ = std::make_unique<ELITE::RtsiClientInterface>();
     rtsi_interface_->connect(ip);
-    
+
     if (!rtsi_interface_->negotiateProtocolVersion()) {
         RCLCPP_FATAL(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI check protocol version: 'fail'.");
         return false;
     }
-    
+
     std::vector<std::string> output_recipe = readRecipe(output_file);
     std::vector<std::string> input_recipe = readRecipe(input_file);
-    
-    rtsi_out_recipe_ = rtsi_interface_->setupOutputRecipe(output_recipe);
+
+    rtsi_out_recipe_ = rtsi_interface_->setupOutputRecipe(output_recipe, 250);
     rtsi_in_recipe_ = rtsi_interface_->setupInputRecipe(input_recipe);
 
     if (!rtsi_interface_->start()) {
@@ -486,7 +489,7 @@ hardware_interface::return_type EliteCSPositionHardwareInterface::read(const rcl
     rtsi_out_recipe_->getValue("tool_output_voltage", tool_output_voltage_copy_);
     rtsi_out_recipe_->getValue("tool_output_current", tool_output_current_);
     rtsi_out_recipe_->getValue("tool_temperature", tool_temperature_);
-    
+
     uint32_t runtime_state = 0;
     rtsi_out_recipe_->getValue("runtime_state", runtime_state);
     runtime_state_ = static_cast<ELITE::TaskStatus>(runtime_state);
@@ -522,10 +525,10 @@ hardware_interface::return_type EliteCSPositionHardwareInterface::read(const rcl
     uint32_t robot_status = 0;
     rtsi_out_recipe_->getValue("robot_status_bits", robot_status);
     std::bitset<4> robot_status_bits = robot_status;
-    robot_status_bits_copy_[0] = robot_status_bits[0]; // is power on
-    robot_status_bits_copy_[1] = robot_status_bits[1]; // is program running
-    robot_status_bits_copy_[2] = robot_status_bits[2]; // is freedrive button pressed
-    robot_status_bits_copy_[3] = robot_status_bits[3]; // no use
+    robot_status_bits_copy_[0] = robot_status_bits[0];  // is power on
+    robot_status_bits_copy_[1] = robot_status_bits[1];  // is program running
+    robot_status_bits_copy_[2] = robot_status_bits[2];  // is freedrive button pressed
+    robot_status_bits_copy_[3] = robot_status_bits[3];  // no use
 
     uint32_t safety_status = 0;
     rtsi_out_recipe_->getValue("robot_status_bits", robot_status);
@@ -556,10 +559,9 @@ hardware_interface::return_type EliteCSPositionHardwareInterface::read(const rcl
     }
 
     is_robot_connected_ = eli_driver_->isRobotConnected();
-    
+
     // If power off to power on, init some commands
     if (robot_status_bits[0] && !is_last_power_on_) {
-        
         if (!rtsi_interface_->receiveData(rtsi_out_recipe_, true)) {
             RCLCPP_FATAL(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI receive data: 'fail'.");
             return hardware_interface::return_type::ERROR;
@@ -567,14 +569,16 @@ hardware_interface::return_type EliteCSPositionHardwareInterface::read(const rcl
         rtsi_out_recipe_->getValue("actual_joint_positions", joint_positions_);
 
         position_commands_ = joint_positions_;
-        velocity_commands_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+        velocity_commands_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
         target_speed_fraction_cmd_ = NO_NEW_CMD;
         resend_external_script_cmd_ = NO_NEW_CMD;
         zero_ftsensor_cmd_ = NO_NEW_CMD;
         hand_back_control_cmd_ = NO_NEW_CMD;
+        freedrive_start_cmd_ = NO_NEW_CMD;
+        freedrive_end_cmd_ = NO_NEW_CMD;
         is_last_power_on_ = true;
         RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "Power off to power on");
-    } else if(!robot_status_bits[0] && is_last_power_on_) {
+    } else if (!robot_status_bits[0] && is_last_power_on_) {
         is_last_power_on_ = false;
         RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "Power off");
     }
@@ -584,11 +588,9 @@ hardware_interface::return_type EliteCSPositionHardwareInterface::read(const rcl
     transformForceTorque();
 
     system_interface_initialized_ = 1.0;
-    robot_task_running_copy_ = ((runtime_state_ == ELITE::TaskStatus::PLAYING) &&
-                                is_robot_connected_ );
+    robot_task_running_copy_ = ((runtime_state_ == ELITE::TaskStatus::PLAYING) && is_robot_connected_);
 
     return hardware_interface::return_type::OK;
-
 }
 
 hardware_interface::return_type EliteCSPositionHardwareInterface::write(const rclcpp::Time& time, const rclcpp::Duration& period) {
@@ -602,20 +604,22 @@ hardware_interface::return_type EliteCSPositionHardwareInterface::write(const rc
         } else if (velocity_controller_running_) {
             eli_driver_->writeSpeedj(velocity_commands_, recv_timeout_ * 1000);
 
+        } else if (freedrive_controller_running_ && freedrive_activated_) {
+            eli_driver_->writeFreedrive(ELITE::FreedriveAction::FREEDRIVE_NOOP, recv_timeout_ * 1000);
         } else {
-            eli_driver_->writeIdle(1000);
+            eli_driver_->writeIdle(recv_timeout_ * 1000);
         }
     }
 
     return hardware_interface::return_type::OK;
 }
 
-bool EliteCSPositionHardwareInterface::updateStandardIO(bool *is_update) {
+bool EliteCSPositionHardwareInterface::updateStandardIO(bool* is_update) {
     // Standard digital output
     std::bitset<STANDARD_DIG_GPIO_NUM> standard_digital_output_mask_bits = 0;
     std::bitset<STANDARD_DIG_GPIO_NUM> standard_digital_output_bits = 0;
     bool need_update = false;
-    for (size_t i = 0; i < STANDARD_DIG_GPIO_NUM; i++) {    
+    for (size_t i = 0; i < STANDARD_DIG_GPIO_NUM; i++) {
         if (!std::isnan(standard_dig_out_bits_cmd_[i]) && rtsi_in_recipe_ != nullptr) {
             standard_digital_output_mask_bits[i] = true;
             standard_digital_output_bits[i] = static_cast<bool>(standard_dig_out_bits_cmd_[i]);
@@ -626,19 +630,19 @@ bool EliteCSPositionHardwareInterface::updateStandardIO(bool *is_update) {
     }
     if (need_update) {
         uint16_t standard_digital_output_mask = static_cast<uint16_t>(standard_digital_output_mask_bits.to_ulong());
-        if(!rtsi_in_recipe_->setValue("standard_digital_output_mask", standard_digital_output_mask)) {
+        if (!rtsi_in_recipe_->setValue("standard_digital_output_mask", standard_digital_output_mask)) {
             return false;
         }
 
         uint16_t standard_digital_output = static_cast<uint16_t>(standard_digital_output_bits.to_ulong());
-        if(!rtsi_in_recipe_->setValue("standard_digital_output", standard_digital_output)) {
+        if (!rtsi_in_recipe_->setValue("standard_digital_output", standard_digital_output)) {
             return false;
         }
     }
     return true;
 }
 
-bool EliteCSPositionHardwareInterface::updateConfigIO(bool *is_update) {
+bool EliteCSPositionHardwareInterface::updateConfigIO(bool* is_update) {
     // Configure digital output
     std::bitset<CONF_DIG_GPIO_NUM> config_digital_output_mask_bits = 0;
     std::bitset<CONF_DIG_GPIO_NUM> config_digital_output_bits = 0;
@@ -652,7 +656,7 @@ bool EliteCSPositionHardwareInterface::updateConfigIO(bool *is_update) {
         }
         conf_dig_out_bits_cmd_[i] = NO_NEW_CMD;
     }
-    if(need_update) {
+    if (need_update) {
         uint8_t config_digital_output_mask = static_cast<uint8_t>(config_digital_output_mask_bits.to_ulong());
         if (!rtsi_in_recipe_->setValue("configurable_digital_output_mask", config_digital_output_mask)) {
             return false;
@@ -664,7 +668,7 @@ bool EliteCSPositionHardwareInterface::updateConfigIO(bool *is_update) {
     return true;
 }
 
-bool EliteCSPositionHardwareInterface::updateToolDigital(bool *is_update) {
+bool EliteCSPositionHardwareInterface::updateToolDigital(bool* is_update) {
     // Tool digital IO
     std::bitset<CONF_DIG_GPIO_NUM> tool_digital_output_mask_bits = 0;
     std::bitset<CONF_DIG_GPIO_NUM> tool_digital_output_bits = 0;
@@ -680,19 +684,19 @@ bool EliteCSPositionHardwareInterface::updateToolDigital(bool *is_update) {
     }
     if (need_update) {
         uint8_t tool_digital_output_mask = static_cast<uint8_t>(tool_digital_output_mask_bits.to_ulong());
-        if(!rtsi_in_recipe_->setValue("tool_digital_output_mask", tool_digital_output_mask)) {
+        if (!rtsi_in_recipe_->setValue("tool_digital_output_mask", tool_digital_output_mask)) {
             return false;
         }
 
         uint8_t tool_digital_output = static_cast<uint8_t>(tool_digital_output_bits.to_ulong());
-        if(!rtsi_in_recipe_->setValue("tool_digital_output", tool_digital_output)) {
+        if (!rtsi_in_recipe_->setValue("tool_digital_output", tool_digital_output)) {
             return false;
         }
     }
     return true;
 }
 
-bool EliteCSPositionHardwareInterface::updateStandardAnalog(bool *is_update) {
+bool EliteCSPositionHardwareInterface::updateStandardAnalog(bool* is_update) {
     // Standard analog output
     std::bitset<STANARD_ANALOG_IO_NUM> standard_analog_output_type_bit = 0;
     std::bitset<STANARD_ANALOG_IO_NUM> standard_analog_output_mask_bit = 0;
@@ -706,7 +710,7 @@ bool EliteCSPositionHardwareInterface::updateStandardAnalog(bool *is_update) {
         }
         if (!std::isnan(standard_analog_output_cmd_[i])) {
             standard_analog_output_mask_bit[i] = true;
-            if(!rtsi_in_recipe_->setValue("standard_analog_output_" + std::to_string(i), standard_analog_output_cmd_[i])) {
+            if (!rtsi_in_recipe_->setValue("standard_analog_output_" + std::to_string(i), standard_analog_output_cmd_[i])) {
                 return false;
             }
             standard_analog_output_cmd_[i] = NO_NEW_CMD;
@@ -716,19 +720,19 @@ bool EliteCSPositionHardwareInterface::updateStandardAnalog(bool *is_update) {
     }
     if (need_update) {
         int32_t standard_analog_output_type = static_cast<int32_t>(standard_analog_output_type_bit.to_ulong());
-        if(!rtsi_in_recipe_->setValue("standard_analog_output_type", standard_analog_output_type)) {
+        if (!rtsi_in_recipe_->setValue("standard_analog_output_type", standard_analog_output_type)) {
             return false;
         }
 
         int32_t standard_analog_output_mask = static_cast<int32_t>(standard_analog_output_mask_bit.to_ulong());
-        if(rtsi_in_recipe_->setValue("standard_analog_output_mask", standard_analog_output_mask)) {
+        if (rtsi_in_recipe_->setValue("standard_analog_output_mask", standard_analog_output_mask)) {
             return false;
         }
     }
     return true;
 }
 
-bool EliteCSPositionHardwareInterface::updateToolVoltage(bool *is_update) {
+bool EliteCSPositionHardwareInterface::updateToolVoltage(bool* is_update) {
     // Tool voltage
     bool ret = true;
     if (!std::isnan(tool_voltage_cmd_) && rtsi_interface_ != nullptr) {
@@ -754,12 +758,11 @@ void EliteCSPositionHardwareInterface::updateAsyncIO() {
     if (is_io_update && io_async_success_ != false) {
         io_async_success_ = true;
     }
-    
 
     if (!std::isnan(target_speed_fraction_cmd_) && rtsi_interface_ != nullptr) {
         if (rtsi_in_recipe_->setValue("speed_slider_mask", (int)1) &&
             rtsi_in_recipe_->setValue("speed_slider_fraction", target_speed_fraction_cmd_)) {
-                scaling_async_success_ = true;
+            scaling_async_success_ = true;
         }
         target_speed_fraction_cmd_ = NO_NEW_CMD;
     }
@@ -771,8 +774,8 @@ void EliteCSPositionHardwareInterface::updateAsyncIO() {
                 std::this_thread::sleep_for(1ms);
             }
             resend_external_script_async_success_ = eli_driver_->sendExternalControlScript();
-            RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), 
-                "Send external control: %s", resend_external_script_async_success_ ? "success" : "fail");
+            RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "Send external control: %s",
+                        resend_external_script_async_success_ ? "success" : "fail");
         } catch (const ELITE::EliteException& e) {
             RCLCPP_ERROR(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "Service Call failed: '%s'", e.what());
         }
@@ -787,20 +790,34 @@ void EliteCSPositionHardwareInterface::updateAsyncIO() {
 
     if (!std::isnan(payload_mass_) && !std::isnan(payload_center_of_gravity_[0]) && !std::isnan(payload_center_of_gravity_[1]) &&
         !std::isnan(payload_center_of_gravity_[2]) && eli_driver_ != nullptr) {
-            payload_async_success_ = eli_driver_->setPayload(payload_mass_, payload_center_of_gravity_);
-            payload_mass_ = NO_NEW_CMD;
-            payload_center_of_gravity_ = {NO_NEW_CMD, NO_NEW_CMD, NO_NEW_CMD};
+        payload_async_success_ = eli_driver_->setPayload(payload_mass_, payload_center_of_gravity_);
+        payload_mass_ = NO_NEW_CMD;
+        payload_center_of_gravity_ = {NO_NEW_CMD, NO_NEW_CMD, NO_NEW_CMD};
     }
 
     if (!std::isnan(zero_ftsensor_cmd_) && eli_driver_ != nullptr) {
         zero_ftsensor_async_success_ = eli_driver_->zeroFTSensor();
         zero_ftsensor_cmd_ = NO_NEW_CMD;
     }
+
+    if (!std::isnan(freedrive_start_cmd_) && eli_driver_ != nullptr) {
+        freedrive_async_success_ = eli_driver_->writeFreedrive(ELITE::FreedriveAction::FREEDRIVE_START, 0);
+        freedrive_start_cmd_ = NO_NEW_CMD;
+        freedrive_activated_ = true;
+        RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "Started freedrive mode");
+    }
+
+    if (!std::isnan(freedrive_end_cmd_) && eli_driver_ != nullptr) {
+        freedrive_async_success_ = eli_driver_->writeFreedrive(ELITE::FreedriveAction::FREEDRIVE_END, 0);
+        freedrive_end_cmd_ = NO_NEW_CMD;
+        freedrive_activated_ = false;
+        RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "Ended freedrive mode");
+    }
+
     if (rtsi_interface_->isConnected()) {
         rtsi_interface_->send(rtsi_in_recipe_);
     }
 }
-
 
 void EliteCSPositionHardwareInterface::transformForceTorque() {
     tcp_force_.setValue(ft_sensor_measurements_[0], ft_sensor_measurements_[1], ft_sensor_measurements_[2]);
@@ -811,8 +828,7 @@ void EliteCSPositionHardwareInterface::transformForceTorque() {
     tcp_force_ = tf2::quatRotate(rotation_quat.inverse(), tcp_force_);
     tcp_torque_ = tf2::quatRotate(rotation_quat.inverse(), tcp_torque_);
 
-    ft_sensor_measurements_ = {tcp_force_.x(),  tcp_force_.y(),  tcp_force_.z(),
-                               tcp_torque_.x(), tcp_torque_.y(), tcp_torque_.z()};
+    ft_sensor_measurements_ = {tcp_force_.x(), tcp_force_.y(), tcp_force_.z(), tcp_torque_.x(), tcp_torque_.y(), tcp_torque_.z()};
 }
 
 void EliteCSPositionHardwareInterface::extractToolPose() {
@@ -835,47 +851,108 @@ void EliteCSPositionHardwareInterface::extractToolPose() {
 hardware_interface::return_type EliteCSPositionHardwareInterface::prepare_command_mode_switch(
     const std::vector<std::string>& start_interfaces, const std::vector<std::string>& stop_interfaces) {
     hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
+    std::vector<std::vector<std::string>> control_modes(info_.joints.size());
+    const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
 
-    start_modes_.clear();
-    stop_modes_.clear();
+    start_modes_ = std::vector<std::vector<std::string>>(info_.joints.size());
+    stop_modes_ = std::vector<std::vector<std::string>>(info_.joints.size());
+
+    // Assess current state
+    for (size_t i = 0; i < info_.joints.size(); i++) {
+        if (position_controller_running_) {
+            control_modes[i] = {hardware_interface::HW_IF_POSITION};
+        }
+        if (velocity_controller_running_) {
+            control_modes[i] = {hardware_interface::HW_IF_VELOCITY};
+        }
+        if (freedrive_controller_running_) {
+            control_modes[i].push_back(ELITE_HW_IF_FREEDRIVE);
+        }
+    }
 
     // Starting interfaces
-    // add start interface per joint in tmp var for later check
+    // If a joint has been reserved already, raise an error.
+    // Modes that are not directly mapped to a single joint.
     for (const auto& key : start_interfaces) {
-        for (auto i = 0u; i < info_.joints.size(); i++) {
+        for (size_t i = 0; i < info_.joints.size(); i++) {
             if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION) {
-                start_modes_.push_back(hardware_interface::HW_IF_POSITION);
-            }
-            if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
-                start_modes_.push_back(hardware_interface::HW_IF_VELOCITY);
+                // Position control mode
+                if (containsAnyOfString<hardware_interface::HW_IF_VELOCITY, ELITE_HW_IF_FREEDRIVE>(start_modes_[i])) {
+                    RCLCPP_ERROR(rclcpp::get_logger("EliteCSPositionHardwareInterface"),
+                                 "Try to start position control while there is another control mode already requested.");
+                    return hardware_interface::return_type::ERROR;
+                }
+                start_modes_[i].push_back(hardware_interface::HW_IF_POSITION);
+
+            } else if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
+                // Velocity control mode
+                if (containsAnyOfString<hardware_interface::HW_IF_POSITION, ELITE_HW_IF_FREEDRIVE>(start_modes_[i])) {
+                    RCLCPP_ERROR(rclcpp::get_logger("EliteCSPositionHardwareInterface"),
+                                 "Try to start velocity control while there is another control mode already requested.");
+                    return hardware_interface::return_type::ERROR;
+                }
+                start_modes_[i].push_back(hardware_interface::HW_IF_VELOCITY);
+
+            } else if (key == tf_prefix + ELITE_HW_IF_FREEDRIVE + "/" + "freedrive_async_success") {
+                // Freedrive control mode
+                if (containsAnyOfString<hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY>(start_modes_[i])) {
+                    RCLCPP_ERROR(rclcpp::get_logger("EliteCSPositionHardwareInterface"),
+                                 "Try to start freedrive control while there is another control mode already requested.");
+                    return hardware_interface::return_type::ERROR;
+                }
+                start_modes_[i].push_back(ELITE_HW_IF_FREEDRIVE);
             }
         }
     }
-    // set new mode to all interfaces at the same time
-    if (start_modes_.size() != 0 && start_modes_.size() != 6) {
-        ret_val = hardware_interface::return_type::ERROR;
-    }
 
-    // all start interfaces must be the same - can't mix position and velocity control
-    if (start_modes_.size() != 0 && !std::equal(start_modes_.begin() + 1, start_modes_.end(), start_modes_.begin())) {
-        ret_val = hardware_interface::return_type::ERROR;
+    if (!std::all_of(start_modes_.begin() + 1, start_modes_.end(),
+                     [&](const std::vector<std::string>& other) { return other == start_modes_[0]; })) {
+        RCLCPP_ERROR(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "There are different joint start modes");
+        return hardware_interface::return_type::ERROR;
     }
 
     // Stopping interfaces
     // add stop interface per joint in tmp var for later check
     for (const auto& key : stop_interfaces) {
-        for (auto i = 0u; i < info_.joints.size(); i++) {
+        for (size_t i = 0; i < info_.joints.size(); i++) {
             if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_POSITION) {
-                stop_modes_.push_back(StoppingInterface::STOP_POSITION);
-            }
-            if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
-                stop_modes_.push_back(StoppingInterface::STOP_VELOCITY);
+                stop_modes_[i].push_back(hardware_interface::HW_IF_POSITION);
+                removeVectorElements<std::string>(control_modes[i], hardware_interface::HW_IF_POSITION);
+            } else if (key == info_.joints[i].name + "/" + hardware_interface::HW_IF_VELOCITY) {
+                stop_modes_[i].push_back(hardware_interface::HW_IF_VELOCITY);
+                removeVectorElements<std::string>(control_modes[i], hardware_interface::HW_IF_VELOCITY);
+            } else if (key == tf_prefix + ELITE_HW_IF_FREEDRIVE + "/" + "freedrive_async_success") {
+                stop_modes_[i].push_back(ELITE_HW_IF_FREEDRIVE);
+                removeVectorElements<std::string>(control_modes[i], ELITE_HW_IF_FREEDRIVE);
             }
         }
     }
-    // stop all interfaces at the same time
-    if (stop_modes_.size() != 0 &&
-        (stop_modes_.size() != 6 || !std::equal(stop_modes_.begin() + 1, stop_modes_.end(), stop_modes_.begin()))) {
+
+    // Do not start conflicting controllers
+    // Freedrive mode requested to start
+    if (containsAnyOfString<ELITE_HW_IF_FREEDRIVE>(start_modes_[0]) &&
+        (containsAnyOfString<hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY>(start_modes_[0]) ||
+         containsAnyOfString<hardware_interface::HW_IF_POSITION, hardware_interface::HW_IF_VELOCITY>(control_modes[0]))) {
+        RCLCPP_ERROR(rclcpp::get_logger("EliteCSPositionHardwareInterface"),
+                     "Try to start freedrive control while there is either position or velocity mode running.");
+        ret_val = hardware_interface::return_type::ERROR;
+    }
+
+    // Position mode requested to start
+    if (containsAnyOfString<hardware_interface::HW_IF_POSITION>(start_modes_[0]) &&
+        (containsAnyOfString<ELITE_HW_IF_FREEDRIVE, hardware_interface::HW_IF_VELOCITY>(start_modes_[0]) ||
+         containsAnyOfString<ELITE_HW_IF_FREEDRIVE, hardware_interface::HW_IF_VELOCITY>(control_modes[0]))) {
+        RCLCPP_ERROR(rclcpp::get_logger("EliteCSPositionHardwareInterface"),
+                     "Try to start position control while there is either freedrive or velocity mode running.");
+        ret_val = hardware_interface::return_type::ERROR;
+    }
+
+    // Velocity mode requested to start
+    if (containsAnyOfString<hardware_interface::HW_IF_VELOCITY>(start_modes_[0]) &&
+        (containsAnyOfString<ELITE_HW_IF_FREEDRIVE, hardware_interface::HW_IF_POSITION>(start_modes_[0]) ||
+         containsAnyOfString<ELITE_HW_IF_FREEDRIVE, hardware_interface::HW_IF_POSITION>(control_modes[0]))) {
+        RCLCPP_ERROR(rclcpp::get_logger("EliteCSPositionHardwareInterface"),
+                     "Try to start velocity control while there is either freedrive or velocity mode running.");
         ret_val = hardware_interface::return_type::ERROR;
     }
 
@@ -889,27 +966,41 @@ hardware_interface::return_type EliteCSPositionHardwareInterface::perform_comman
     (void)stop_interfaces;
     hardware_interface::return_type ret_val = hardware_interface::return_type::OK;
 
-    if (stop_modes_.size() != 0 &&
-        std::find(stop_modes_.begin(), stop_modes_.end(), StoppingInterface::STOP_POSITION) != stop_modes_.end()) {
+    if (stop_modes_[0].size() != 0 &&
+        std::find(stop_modes_[0].begin(), stop_modes_[0].end(), hardware_interface::HW_IF_POSITION) != stop_modes_[0].end()) {
         position_controller_running_ = false;
         position_commands_ = joint_positions_;
-    } else if (stop_modes_.size() != 0 &&
-               std::find(stop_modes_.begin(), stop_modes_.end(), StoppingInterface::STOP_VELOCITY) != stop_modes_.end()) {
+    }
+    if (stop_modes_[0].size() != 0 &&
+        std::find(stop_modes_[0].begin(), stop_modes_[0].end(), hardware_interface::HW_IF_VELOCITY) != stop_modes_[0].end()) {
         velocity_controller_running_ = false;
         velocity_commands_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
     }
+    if (stop_modes_[0].size() != 0 &&
+        std::find(stop_modes_[0].begin(), stop_modes_[0].end(), ELITE_HW_IF_FREEDRIVE) != stop_modes_[0].end()) {
+        freedrive_controller_running_ = false;
+        freedrive_activated_ = false;
+        freedrive_end_cmd_ = 1.0;
+    }
 
+    // If position mode requested to start
     if (start_modes_.size() != 0 &&
-        std::find(start_modes_.begin(), start_modes_.end(), hardware_interface::HW_IF_POSITION) != start_modes_.end()) {
+        std::find(start_modes_[0].begin(), start_modes_[0].end(), hardware_interface::HW_IF_POSITION) != start_modes_[0].end()) {
         velocity_controller_running_ = false;
         position_commands_ = joint_positions_;
         position_controller_running_ = true;
 
-    } else if (start_modes_.size() != 0 &&
-               std::find(start_modes_.begin(), start_modes_.end(), hardware_interface::HW_IF_VELOCITY) != start_modes_.end()) {
+    } else if (start_modes_[0].size() != 0 && std::find(start_modes_[0].begin(), start_modes_[0].end(),
+                                                        hardware_interface::HW_IF_VELOCITY) != start_modes_[0].end()) {
         position_controller_running_ = false;
         velocity_commands_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
         velocity_controller_running_ = true;
+    } else if (start_modes_[0].size() != 0 &&
+               std::find(start_modes_[0].begin(), start_modes_[0].end(), ELITE_HW_IF_FREEDRIVE) != start_modes_[0].end()) {
+        position_controller_running_ = false;
+        velocity_controller_running_ = false;
+        freedrive_activated_ = false;
+        freedrive_controller_running_ = true;
     }
 
     start_modes_.clear();

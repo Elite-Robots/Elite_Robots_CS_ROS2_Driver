@@ -53,12 +53,18 @@ generate_parameter_library(
   src/scaled_joint_trajectory_controller_parameters.yaml
 )
 
+generate_parameter_library(
+  freedrive_controller_parameters
+  src/freedrive_controller_parameters.yaml
+)
+
 add_library(
   ${PROJECT_NAME} 
   SHARED
   src/scaled_joint_trajectory_controller.cpp
   src/speed_scaling_state_broadcaster.cpp
   src/gpio_controller.cpp
+  src/freedrive_controller.cpp
 )
 
 target_include_directories(
@@ -71,6 +77,7 @@ target_link_libraries(
   gpio_controller_parameters
   speed_scaling_state_broadcaster_parameters
   scaled_joint_trajectory_controller_parameters
+  freedrive_controller_parameters
 )
 ament_target_dependencies(
   ${PROJECT_NAME}
