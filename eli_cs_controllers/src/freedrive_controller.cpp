@@ -53,7 +53,7 @@ controller_interface::CallbackReturn FreedriveController::on_configure(const rcl
             }
         }
     };
-    freedrive_sub_ = get_node()->create_subscription<std_msgs::msg::Bool>("~/start_freedrive", 10, cmd_cb);
+    freedrive_sub_ = get_node()->create_subscription<std_msgs::msg::Bool>("~/enable_freedrive", 10, cmd_cb);
 
     if (!freedrive_param_listener_) {
         RCLCPP_ERROR(get_node()->get_logger(), "Error encountered during configuration");
@@ -128,17 +128,14 @@ controller_interface::return_type FreedriveController::update(const rclcpp::Time
 
                 // Set command interface to enable
                 start_interface_->get().set_value(1.0);
-
-                // async_success_interface_->get().set_value(2.0);
             }
 
         } else {
             RCLCPP_INFO(get_node()->get_logger(), "Received command to stop Freedrive Mode.");
 
             end_interface_->get().set_value(1.0);
-
-            // async_success_interface_->get().set_value(2.0);
         }
+        is_new_request_ = false;
     }
 
     return controller_interface::return_type::OK;
