@@ -54,4 +54,4 @@ ros2 topic pub --rate 2 /freedrive_controller/enable_freedrive std_msgs/msg/Bool
 
 Always ensure position/velocity controllers are inactive before enabling freedrive mode.
 
-The topic publish rate must be maintained above 1Hz, otherwise the freedrive mode will automatically terminate. (This safety feature is currently not implemented)
+The topic publish rate must be maintained above 1Hz, otherwise the freedrive mode will automatically terminate. 

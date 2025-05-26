@@ -22,6 +22,7 @@ controller_interface::InterfaceConfiguration FreedriveController::command_interf
     config.type = controller_interface::interface_configuration_type::INDIVIDUAL;
 
     const std::string tf_prefix = freedrive_params_.tf_prefix;
+    timeout_ = std::chrono::seconds(freedrive_params_.inactive_timeout);
 
     // Get the command interfaces needed for freedrive mode from the hardware interface
     config.names.emplace_back(tf_prefix + "freedrive_mode/freedrive_async_success");
@@ -37,13 +38,27 @@ controller_interface::InterfaceConfiguration FreedriveController::state_interfac
     return config;
 }
 
+void FreedriveController::startTimer() {
+    if (!freedrive_timer_) {
+        auto timeout_func = [&](){
+            if(is_freedrive_active_) {
+                RCLCPP_INFO(get_node()->get_logger(), "Freedrive will be deactivated because receiving command timeout.");
+                is_freedrive_active_ = false;
+                is_new_request_ = true;
+            }
+        };
+        freedrive_timer_ = get_node()->create_wall_timer(timeout_, timeout_func);
+    }
+}
+
 controller_interface::CallbackReturn FreedriveController::on_configure(const rclcpp_lifecycle::State& previous_state) {
-    auto cmd_cb = [&](const std_msgs::msg::Bool::SharedPtr msg) {
+    auto enable_freedrive_cb = [&](const std_msgs::msg::Bool::SharedPtr msg) {
         if (get_node()->get_current_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
             if (msg->data) {
                 if ((!is_freedrive_active_) && (!is_new_request_)) {
                     is_freedrive_active_ = true;
                     is_new_request_ = true;
+                    startTimer();
                 }
             } else {
                 if (is_freedrive_active_ && (!is_new_request_)) {
@@ -52,8 +67,11 @@ controller_interface::CallbackReturn FreedriveController::on_configure(const rcl
                 }
             }
         }
+        if (freedrive_timer_) {
+            freedrive_timer_->reset(); 
+        }
     };
-    freedrive_sub_ = get_node()->create_subscription<std_msgs::msg::Bool>("~/enable_freedrive", 10, cmd_cb);
+    freedrive_sub_ = get_node()->create_subscription<std_msgs::msg::Bool>("~/enable_freedrive", 10, enable_freedrive_cb);
 
     if (!freedrive_param_listener_) {
         RCLCPP_ERROR(get_node()->get_logger(), "Error encountered during configuration");
@@ -113,6 +131,7 @@ controller_interface::CallbackReturn FreedriveController::on_cleanup(const rclcp
 
 controller_interface::CallbackReturn FreedriveController::on_deactivate(const rclcpp_lifecycle::State&) {
     is_freedrive_active_ = false;
+    freedrive_timer_.reset();
     return CallbackReturn::SUCCESS;
 }
 

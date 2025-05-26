@@ -10,8 +10,3 @@ freedrive_controller:
     default_value: 1,
     description: "Time interval (in seconds) of message inactivity after which freedrive is deactivated"
   }
-  check_io_successful_retries: {
-    type: int,
-    default_value: 10,
-    description: "Amount of retries for checking if setting force_mode was successful"
-  }
