@@ -46,4 +46,4 @@ ros2 topic pub --rate 2 /freedrive_controller/enable_freedrive std_msgs/msg/Bool
 ros2 topic pub --rate 2 /freedrive_controller/enable_freedrive std_msgs/msg/Bool "{data: false}"
 ```
 
-topic的发布频率务必大于1HZ，否则将结束freedrive模式。（此功能还未实现）
+topic的发布频率务必大于1HZ，否则将结束freedrive模式。
