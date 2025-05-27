@@ -58,6 +58,7 @@ class EliteCSPositionHardwareInterface : public hardware_interface::SystemInterf
                                                                 const std::vector<std::string>& stop_interfaces) final;
 
    protected:
+    ELITE::EliteDriverConfig driver_config_;
     std::unique_ptr<ELITE::EliteDriver> eli_driver_;
     std::unique_ptr<ELITE::RtsiClientInterface> rtsi_interface_;
     ELITE::RtsiRecipeSharedPtr rtsi_out_recipe_;
@@ -168,7 +169,7 @@ class EliteCSPositionHardwareInterface : public hardware_interface::SystemInterf
 
     void extractToolPose();
     void transformForceTorque();
-    bool rtsiInit(const std::string& ip, const std::string& output_file, const std::string& input_file);
+    bool rtsiInit(const std::string& ip);
     std::vector<std::string> readRecipe(const std::string& recipe_file);
 
     template <const char*... Args>

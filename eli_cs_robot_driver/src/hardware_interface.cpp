@@ -316,10 +316,6 @@ hardware_interface::CallbackReturn EliteCSPositionHardwareInterface::on_configur
     const std::string robot_ip = info_.hardware_parameters["robot_ip"];
     // Path to the script code that will be sent to the robot
     const std::string script_filename = info_.hardware_parameters["script_filename"];
-    // Path to the file containing the recipe used for requesting RTSI outputs.
-    const std::string output_recipe_filename = info_.hardware_parameters["output_recipe_filename"];
-    // Path to the file containing the recipe used for requesting RTSI inputs.
-    const std::string input_recipe_filename = info_.hardware_parameters["input_recipe_filename"];
     // Start robot in headless mode. This does not require the 'External Control' EliteCOs to be running
     // on the robot, but this will send the script to the robot directly. This requires the robot to
     // run in 'remote-control' mode.
@@ -356,20 +352,19 @@ hardware_interface::CallbackReturn EliteCSPositionHardwareInterface::on_configur
     const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
     RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "Initializing driver...");
     try {
-        ELITE::EliteDriverConfig driver_config;
-        driver_config.robot_ip = robot_ip;
-        driver_config.local_ip = local_ip;
-        driver_config.script_file_path = script_filename;
-        driver_config.headless_mode = headless_mode;
-        driver_config.script_sender_port = script_sender_port;
-        driver_config.reverse_port = reverse_port;
-        driver_config.trajectory_port = trajectory_port;
-        driver_config.script_command_port = script_command_port;
-        driver_config.servoj_time = servoj_time;
-        driver_config.servoj_lookahead_time = servoj_lookahead_time;
-        driver_config.servoj_gain = servoj_gain;
-        eli_driver_ = std::make_unique<ELITE::EliteDriver>(driver_config);
-        if (rtsiInit(robot_ip, output_recipe_filename, input_recipe_filename)) {
+        driver_config_.robot_ip = robot_ip;
+        driver_config_.local_ip = local_ip;
+        driver_config_.script_file_path = script_filename;
+        driver_config_.headless_mode = headless_mode;
+        driver_config_.script_sender_port = script_sender_port;
+        driver_config_.reverse_port = reverse_port;
+        driver_config_.trajectory_port = trajectory_port;
+        driver_config_.script_command_port = script_command_port;
+        driver_config_.servoj_time = servoj_time;
+        driver_config_.servoj_lookahead_time = servoj_lookahead_time;
+        driver_config_.servoj_gain = servoj_gain;
+        eli_driver_ = std::make_unique<ELITE::EliteDriver>(driver_config_);
+        if (rtsiInit(robot_ip)) {
             RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI init: 'success'.");
         } else {
             RCLCPP_FATAL(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI init: 'fail'.");
@@ -437,8 +432,7 @@ std::vector<std::string> EliteCSPositionHardwareInterface::readRecipe(const std:
     return recipe;
 }
 
-bool EliteCSPositionHardwareInterface::rtsiInit(const std::string& ip, const std::string& output_file,
-                                                const std::string& input_file) {
+bool EliteCSPositionHardwareInterface::rtsiInit(const std::string& ip) {
     rtsi_interface_ = std::make_unique<ELITE::RtsiClientInterface>();
     rtsi_interface_->connect(ip);
 
@@ -447,9 +441,12 @@ bool EliteCSPositionHardwareInterface::rtsiInit(const std::string& ip, const std
         return false;
     }
 
-    std::vector<std::string> output_recipe = readRecipe(output_file);
-    std::vector<std::string> input_recipe = readRecipe(input_file);
-
+    // Path to the file containing the recipe used for requesting RTSI outputs.
+    const std::string output_recipe_filename = info_.hardware_parameters["output_recipe_filename"];
+    // Path to the file containing the recipe used for requesting RTSI inputs.
+    const std::string input_recipe_filename = info_.hardware_parameters["input_recipe_filename"];
+    std::vector<std::string> output_recipe = readRecipe(output_recipe_filename);
+    std::vector<std::string> input_recipe = readRecipe(input_recipe_filename);
     rtsi_out_recipe_ = rtsi_interface_->setupOutputRecipe(output_recipe, 250);
     rtsi_in_recipe_ = rtsi_interface_->setupInputRecipe(input_recipe);
 
@@ -470,9 +467,29 @@ void EliteCSPositionHardwareInterface::asyncThread() {
 hardware_interface::return_type EliteCSPositionHardwareInterface::read(const rclcpp::Time& time, const rclcpp::Duration& period) {
     (void)period;
     (void)time;
-    if (!rtsi_interface_->receiveData(rtsi_out_recipe_, true)) {
+    if (!rtsi_interface_ || !rtsi_interface_->isConnected()) {
+        try {
+            if (!rtsiInit(driver_config_.robot_ip)) {
+                RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI init fail, reinitialize in the next cycle");
+                return hardware_interface::return_type::OK;
+            } else {
+                RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI init successful");
+            }
+        } catch(const std::exception& e) {
+            RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI init fail, reinitialize in the next cycle");
+            return hardware_interface::return_type::OK; 
+        }
+    }
+    try {
+        if (!rtsi_interface_->receiveData(rtsi_out_recipe_, false)) {
+            RCLCPP_FATAL(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI receive data: 'fail'.");
+            rtsi_interface_->disconnect();
+            return hardware_interface::return_type::OK;
+        }
+    } catch(const std::exception& e) {
         RCLCPP_FATAL(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI receive data: 'fail'.");
-        return hardware_interface::return_type::ERROR;
+        rtsi_interface_->disconnect();
+        return hardware_interface::return_type::OK;
     }
     rtsi_out_recipe_->getValue("actual_joint_positions", joint_positions_);
     rtsi_out_recipe_->getValue("actual_joint_speeds", joint_velocities_);
