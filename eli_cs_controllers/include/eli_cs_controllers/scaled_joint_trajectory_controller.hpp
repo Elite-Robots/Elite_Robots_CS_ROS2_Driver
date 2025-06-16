@@ -7,7 +7,7 @@
 #include "rclcpp/duration.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
-#include "scaled_joint_trajectory_controller_parameters.hpp"
+#include "eli_cs_controllers/scaled_joint_trajectory_controller_parameters.hpp"
 
 namespace ELITE_CS_CONTROLLER {
 class ScaledJointTrajectoryController : public joint_trajectory_controller::JointTrajectoryController {
