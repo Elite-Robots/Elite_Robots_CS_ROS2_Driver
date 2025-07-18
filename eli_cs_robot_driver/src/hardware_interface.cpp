@@ -328,6 +328,9 @@ hardware_interface::CallbackReturn EliteCSPositionHardwareInterface::on_configur
 
     // The ip address of the host the driver runs on
     std::string local_ip = info_.hardware_parameters["local_ip"];
+    if (local_ip == "0.0.0.0") {
+        local_ip = "";
+    }
 
     // Port (on the host pc) of the trajectory interface
     const int trajectory_port = stoi(info_.hardware_parameters["trajectory_port"]);
