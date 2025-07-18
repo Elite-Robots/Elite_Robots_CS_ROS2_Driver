@@ -334,7 +334,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "local_ip",
-            default_value = "",
+            default_value = "0.0.0.0",
             description="IP that will be used for the robot controller to communicate back to the driver.",
         )
     )
