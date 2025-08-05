@@ -10,9 +10,6 @@
 #include "rcpputils/split.hpp"
 #include "rcutils/logging_macros.h"
 
-namespace rclcpp_lifecycle {
-class State;
-}  // namespace rclcpp_lifecycle
 
 namespace ELITE_CS_CONTROLLER {
 SpeedScalingStateBroadcaster::SpeedScalingStateBroadcaster() {}

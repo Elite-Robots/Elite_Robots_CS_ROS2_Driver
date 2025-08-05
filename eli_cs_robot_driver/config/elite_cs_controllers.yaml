@@ -23,6 +23,9 @@ controller_manager:
 
     scaled_joint_trajectory_controller:
       type: eli_cs_controllers/ScaledJointTrajectoryController
+    
+    freedrive_controller:
+      type: eli_cs_controllers/FreedriveController
 
 force_torque_sensor_broadcaster:
   ros__parameters:
@@ -121,3 +124,7 @@ scaled_joint_trajectory_controller:
       $(var tf_prefix)wrist_2_joint: { trajectory: 0.2, goal: 0.1 }
       $(var tf_prefix)wrist_3_joint: { trajectory: 0.2, goal: 0.1 }
     speed_scaling_interface_name: $(var tf_prefix)speed_scaling/speed_scaling_factor
+
+freedrive_controller:
+  ros__parameters:
+    tf_prefix: "$(var tf_prefix)"

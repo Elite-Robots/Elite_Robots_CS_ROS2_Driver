@@ -120,6 +120,12 @@ p {
 #### *connect*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
 连接到机器人。
 
+#### *restart_safety*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
+重启安全系统。
+
+#### *custom_request*[(eli_dashboard_interface/srv/CustomRequest)](/eli_dashboard_interface/srv/CustomRequest.srv)
+发送自定义指令并且接收回复。
+
 ## GPIO 控制器
 控制器提供数字 IO 发布器、工具数据发布器等功能，同时还提供可以设置机器人 IO 状态的服务。
 

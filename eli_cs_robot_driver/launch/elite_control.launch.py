@@ -264,7 +264,7 @@ def launch_setup(context, *args, **kwargs):
         "speed_scaling_state_broadcaster",
         "force_torque_sensor_broadcaster",
     ]
-    controller_spawner_inactive_names = ["forward_position_controller"]
+    controller_spawner_inactive_names = ["forward_position_controller", "freedrive_controller"]
 
     controller_spawners = [controller_spawner(name) for name in controller_spawner_names] + [
         controller_spawner(name, active=False) for name in controller_spawner_inactive_names
@@ -334,6 +334,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "local_ip",
+            default_value = "0.0.0.0",
             description="IP that will be used for the robot controller to communicate back to the driver.",
         )
     )

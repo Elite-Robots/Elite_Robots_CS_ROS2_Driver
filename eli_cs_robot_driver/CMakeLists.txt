@@ -19,7 +19,7 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(controller_manager REQUIRED)
 find_package(controller_manager_msgs REQUIRED)
 find_package(backward_ros REQUIRED)
-find_package(elite-cs-series-sdk 1.1.0 REQUIRED)
+find_package(elite-cs-series-sdk 1.2.0 REQUIRED)
 
 set(
   THIS_PACKAGE_DEPENDENCIES
