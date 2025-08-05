@@ -16,7 +16,7 @@
 
 #include <std_srvs/srv/trigger.hpp>
 #include <controller_interface/controller_interface.hpp>
-#include <gpio_controller_parameters.hpp>
+#include <eli_cs_controllers/gpio_controller_parameters.hpp>
 #include <rclcpp/duration.hpp>
 #include <rclcpp/time.hpp>
 #include <std_msgs/msg/bool.hpp>

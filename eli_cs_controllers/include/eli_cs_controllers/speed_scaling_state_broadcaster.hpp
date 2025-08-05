@@ -10,7 +10,7 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/lifecycle_publisher.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
-#include "speed_scaling_state_broadcaster_parameters.hpp"
+#include <eli_cs_controllers/speed_scaling_state_broadcaster_parameters.hpp>
 #include "std_msgs/msg/float64.hpp"
 
 namespace ELITE_CS_CONTROLLER {
