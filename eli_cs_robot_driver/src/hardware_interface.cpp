@@ -355,6 +355,12 @@ hardware_interface::CallbackReturn EliteCSPositionHardwareInterface::on_configur
     const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
     RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "Initializing driver...");
     try {
+        if (rtsiInit(robot_ip)) {
+            RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI init: 'success'.");
+        } else {
+            RCLCPP_FATAL(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI init: 'fail'.");
+            return hardware_interface::CallbackReturn::ERROR;
+        }
         driver_config_.robot_ip = robot_ip;
         driver_config_.local_ip = local_ip;
         driver_config_.script_file_path = script_filename;
@@ -367,12 +373,6 @@ hardware_interface::CallbackReturn EliteCSPositionHardwareInterface::on_configur
         driver_config_.servoj_lookahead_time = servoj_lookahead_time;
         driver_config_.servoj_gain = servoj_gain;
         eli_driver_ = std::make_unique<ELITE::EliteDriver>(driver_config_);
-        if (rtsiInit(robot_ip)) {
-            RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI init: 'success'.");
-        } else {
-            RCLCPP_FATAL(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI init: 'fail'.");
-            return hardware_interface::CallbackReturn::ERROR;
-        }
     } catch (ELITE::EliteException& e) {
         RCLCPP_FATAL_STREAM(rclcpp::get_logger("EliteCSPositionHardwareInterface"), e.what());
         return hardware_interface::CallbackReturn::ERROR;
