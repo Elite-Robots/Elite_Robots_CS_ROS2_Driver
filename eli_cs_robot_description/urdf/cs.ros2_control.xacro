@@ -50,8 +50,8 @@
           <param name="script_command_port">${script_command_port}</param>
           <param name="trajectory_port">${trajectory_port}</param>
           <param name="tf_prefix">${tf_prefix}</param>
-          <param name="servoj_gain">2000</param>
-          <param name="servoj_lookahead_time">0.08</param>
+          <param name="servoj_gain">300</param>
+          <param name="servoj_lookahead_time">0.03</param>
           <param name="servoj_time">0.008</param>
           <param name="use_tool_communication">${use_tool_communication}</param>
           <param name="tool_voltage">${tool_voltage}</param>
