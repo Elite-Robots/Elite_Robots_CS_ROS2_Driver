@@ -452,8 +452,8 @@ hardware_interface::return_type EliteCSPositionHardwareInterface::read(const rcl
     joint_velocities_ = rtsi_interface_->getActualJointVelocity();
     joint_efforts_ = rtsi_interface_->getActualJointCurrent();
     speed_scaling_combined_ = rtsi_interface_->getTargetSpeedScaling();
-    ft_sensor_measurements_ = rtsi_interface_->getAcutalTCPForce();
-    tcp_pose_ = rtsi_interface_->getAcutalTCPPose();
+    ft_sensor_measurements_ = rtsi_interface_->getActualTCPForce();
+    tcp_pose_ = rtsi_interface_->getActualTCPPose();
     standard_analog_output_[0] = rtsi_interface_->getAnalogOutput(0);
     standard_analog_output_[1] = rtsi_interface_->getAnalogOutput(1);
     standard_analog_input_[0] = rtsi_interface_->getAnalogInput(0);
