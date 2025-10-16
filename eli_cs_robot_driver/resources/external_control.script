@@ -341,7 +341,7 @@ cmd_servo_joints_queue.put(get_actual_joint_positions())
 
 while control_mode > MODE_STOPPED:
     params_mult = socket_read_binary_integer(REVERSE_DATA_SIZE, "reverse_socket", read_timeout)
-    if params_mult[0] > 0:
+    if params_mult[0] == REVERSE_DATA_SIZE:
         # Convert to read timeout from milliseconds to seconds
         read_timeout = params_mult[1] / 1000.0
 
@@ -439,7 +439,7 @@ while control_mode > MODE_STOPPED:
             setServoQueuePoint(get_inverse_kin(pose, tail_joint))
 
     else:
-        textmsg("Socket timed out waiting for command on reverse_socket. The script will exit now.")
+        textmsg("Socket timed out waiting for command on reverse_socket. The script will exit now. Received " + str(params_mult[0]) + " integers. Expected " + str(REVERSE_DATA_SIZE) + ".")
         control_mode = MODE_STOPPED
 
 stop_thread(script_command_thread_handle)
