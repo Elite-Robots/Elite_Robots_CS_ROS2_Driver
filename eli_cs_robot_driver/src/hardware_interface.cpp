@@ -418,7 +418,7 @@ bool EliteCSPositionHardwareInterface::rtsiInit(const std::string& ip) {
     // Path to the file containing the recipe used for requesting RTSI inputs.
     const std::string input_recipe_filename = info_.hardware_parameters["input_recipe_filename"];
 
-    rtsi_interface_ = std::make_unique<ELITE::RtsiIOInterface>(output_recipe_filename, input_recipe_filename, 250);
+    rtsi_interface_ = std::make_unique<ELITE::RtsiIOInterface>(output_recipe_filename, input_recipe_filename, 125);
     if (!rtsi_interface_->connect(ip)) {
         return false;
     }
@@ -565,19 +565,22 @@ hardware_interface::return_type EliteCSPositionHardwareInterface::write(const rc
 bool EliteCSPositionHardwareInterface::updateStandardIO() {
     // Standard digital output
     std::bitset<STANDARD_DIG_GPIO_NUM> standard_digital_output_bits = 0;
+    std::bitset<STANDARD_DIG_GPIO_NUM> standard_digital_output_mask_bits = 0;
     bool need_update = false;
     for (size_t i = 0; i < STANDARD_DIG_GPIO_NUM; i++) {
         if (!std::isnan(standard_dig_out_bits_cmd_[i])) {
             standard_digital_output_bits[i] = static_cast<bool>(standard_dig_out_bits_cmd_[i]);
+            standard_digital_output_mask_bits[i] = true;
             need_update = true;
         }
         standard_dig_out_bits_cmd_[i] = NO_NEW_CMD;
     }
     if (need_update) {
-        uint16_t standard_digital_output = static_cast<uint16_t>(standard_digital_output_bits.to_ulong());
-        if (!rtsi_interface_->setInputRecipeValue("standard_digital_output_mask", standard_digital_output)) {
+        uint16_t standard_digital_output_mask = static_cast<uint16_t>(standard_digital_output_mask_bits.to_ulong());
+        if (!rtsi_interface_->setInputRecipeValue("standard_digital_output_mask", standard_digital_output_mask)) {
             return false;
         }
+        uint16_t standard_digital_output = static_cast<uint16_t>(standard_digital_output_bits.to_ulong());
         if (!rtsi_interface_->setInputRecipeValue("standard_digital_output", standard_digital_output)) {
             return false;
         }
@@ -588,22 +591,25 @@ bool EliteCSPositionHardwareInterface::updateStandardIO() {
 bool EliteCSPositionHardwareInterface::updateConfigIO() {
     // Configure digital output
     std::bitset<CONF_DIG_GPIO_NUM> config_digital_output_bits = 0;
+    std::bitset<CONF_DIG_GPIO_NUM> config_digital_output_mask_bits = 0;
     bool need_update = false;
     for (size_t i = 0; i < CONF_DIG_GPIO_NUM; i++) {
         if (!std::isnan(conf_dig_out_bits_cmd_[i])) {
             config_digital_output_bits[i] = static_cast<bool>(conf_dig_out_bits_cmd_[i]);
+            config_digital_output_mask_bits[i] = true;
             need_update = true;
         }
         conf_dig_out_bits_cmd_[i] = NO_NEW_CMD;
     }
     if (need_update) {
-        uint8_t config_digital_output = static_cast<uint8_t>(config_digital_output_bits.to_ulong());
-        if (!rtsi_interface_->setInputRecipeValue("configurable_digital_output_mask", config_digital_output)) {
+        uint8_t config_digital_output_mask = config_digital_output_mask_bits.to_ulong();
+        if (!rtsi_interface_->setInputRecipeValue("configurable_digital_output_mask", config_digital_output_mask)) {
             return false;
         }
-       if (!rtsi_interface_->setInputRecipeValue("configurable_digital_output", config_digital_output)) {
+        uint8_t config_digital_output = static_cast<uint8_t>(config_digital_output_bits.to_ulong());
+        if (!rtsi_interface_->setInputRecipeValue("configurable_digital_output", config_digital_output)) {
             return false;
-       }
+        }
     }
     return true;
 }
@@ -611,19 +617,22 @@ bool EliteCSPositionHardwareInterface::updateConfigIO() {
 bool EliteCSPositionHardwareInterface::updateToolDigital() {
     // Tool digital IO
     std::bitset<CONF_DIG_GPIO_NUM> tool_digital_output_bits = 0;
+    std::bitset<CONF_DIG_GPIO_NUM> tool_digital_output_mask_bits = 0;
     bool need_update = false;
     for (size_t i = 0; i < TOOL_DIG_GPIO_NUM; i++) {
         if (!std::isnan(tool_dig_out_bits_cmd_[i])) {
             tool_digital_output_bits[i] = static_cast<bool>(tool_dig_out_bits_cmd_[i]);
+            tool_digital_output_mask_bits[i] = true;
             need_update = true;
         }
         tool_dig_out_bits_cmd_[i] = NO_NEW_CMD;
     }
     if (need_update) {
-        uint8_t tool_digital_output = static_cast<uint8_t>(tool_digital_output_bits.to_ulong());
-        if (!rtsi_interface_->setInputRecipeValue("tool_digital_output_mask", tool_digital_output)) {
+        uint8_t tool_digital_output_mask = static_cast<uint8_t>(tool_digital_output_mask_bits.to_ulong());
+        if (!rtsi_interface_->setInputRecipeValue("tool_digital_output_mask", tool_digital_output_mask)) {
             return false;
         }
+        uint8_t tool_digital_output = static_cast<uint8_t>(tool_digital_output_bits.to_ulong());
         if (!rtsi_interface_->setInputRecipeValue("tool_digital_output", tool_digital_output)) {
             return false;
         }
