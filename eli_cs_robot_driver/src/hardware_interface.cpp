@@ -355,6 +355,12 @@ hardware_interface::CallbackReturn EliteCSPositionHardwareInterface::on_configur
     const std::string tf_prefix = info_.hardware_parameters.at("tf_prefix");
     RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "Initializing driver...");
     try {
+        if (rtsiInit(robot_ip)) {
+            RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI init: 'success'.");
+        } else {
+            RCLCPP_FATAL(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI init: 'fail'.");
+            return hardware_interface::CallbackReturn::ERROR;
+        }
         driver_config_.robot_ip = robot_ip;
         driver_config_.local_ip = local_ip;
         driver_config_.script_file_path = script_filename;
@@ -367,12 +373,6 @@ hardware_interface::CallbackReturn EliteCSPositionHardwareInterface::on_configur
         driver_config_.servoj_lookahead_time = servoj_lookahead_time;
         driver_config_.servoj_gain = servoj_gain;
         eli_driver_ = std::make_unique<ELITE::EliteDriver>(driver_config_);
-        if (rtsiInit(robot_ip)) {
-            RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI init: 'success'.");
-        } else {
-            RCLCPP_FATAL(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI init: 'fail'.");
-            return hardware_interface::CallbackReturn::ERROR;
-        }
     } catch (ELITE::EliteException& e) {
         RCLCPP_FATAL_STREAM(rclcpp::get_logger("EliteCSPositionHardwareInterface"), e.what());
         return hardware_interface::CallbackReturn::ERROR;
@@ -412,49 +412,14 @@ hardware_interface::CallbackReturn EliteCSPositionHardwareInterface::on_cleanup(
     return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-std::vector<std::string> EliteCSPositionHardwareInterface::readRecipe(const std::string& recipe_file) {
-    std::vector<std::string> recipe;
-    std::ifstream file(recipe_file);
-    if (file.fail()) {
-        std::stringstream msg;
-        msg << "Opening file '" << recipe_file << "' failed with error: " << strerror(errno);
-        throw ELITE::EliteException(ELITE::EliteException::Code::FILE_OPEN_FAIL, msg.str());
-    }
-
-    if (file.peek() == std::ifstream::traits_type::eof()) {
-        std::stringstream msg;
-        msg << "The recipe '" << recipe_file << "' file is empty exiting ";
-        throw ELITE::EliteException(ELITE::EliteException::Code::FILE_OPEN_FAIL, msg.str());
-    }
-
-    std::string line;
-    while (std::getline(file, line)) {
-        recipe.push_back(line);
-    }
-
-    return recipe;
-}
-
 bool EliteCSPositionHardwareInterface::rtsiInit(const std::string& ip) {
-    rtsi_interface_ = std::make_unique<ELITE::RtsiClientInterface>();
-    rtsi_interface_->connect(ip);
-
-    if (!rtsi_interface_->negotiateProtocolVersion()) {
-        RCLCPP_FATAL(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI check protocol version: 'fail'.");
-        return false;
-    }
-
     // Path to the file containing the recipe used for requesting RTSI outputs.
     const std::string output_recipe_filename = info_.hardware_parameters["output_recipe_filename"];
     // Path to the file containing the recipe used for requesting RTSI inputs.
     const std::string input_recipe_filename = info_.hardware_parameters["input_recipe_filename"];
-    std::vector<std::string> output_recipe = readRecipe(output_recipe_filename);
-    std::vector<std::string> input_recipe = readRecipe(input_recipe_filename);
-    rtsi_out_recipe_ = rtsi_interface_->setupOutputRecipe(output_recipe, 250);
-    rtsi_in_recipe_ = rtsi_interface_->setupInputRecipe(input_recipe);
 
-    if (!rtsi_interface_->start()) {
-        RCLCPP_FATAL(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI start data sync: 'fail'.");
+    rtsi_interface_ = std::make_unique<ELITE::RtsiIOInterface>(output_recipe_filename, input_recipe_filename, 125);
+    if (!rtsi_interface_->connect(ip)) {
         return false;
     }
     return true;
@@ -483,86 +448,52 @@ hardware_interface::return_type EliteCSPositionHardwareInterface::read(const rcl
             return hardware_interface::return_type::OK; 
         }
     }
-    try {
-        if (!rtsi_interface_->receiveData(rtsi_out_recipe_, false)) {
-            RCLCPP_FATAL(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI receive data: 'fail'.");
-            rtsi_interface_->disconnect();
-            return hardware_interface::return_type::OK;
-        }
-    } catch(const std::exception& e) {
-        RCLCPP_FATAL(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI receive data: 'fail'.");
-        rtsi_interface_->disconnect();
-        return hardware_interface::return_type::OK;
-    }
-    rtsi_out_recipe_->getValue("actual_joint_positions", joint_positions_);
-    rtsi_out_recipe_->getValue("actual_joint_speeds", joint_velocities_);
-    rtsi_out_recipe_->getValue("actual_joint_current", joint_efforts_);
-    rtsi_out_recipe_->getValue("speed_scaling", speed_scaling_combined_);
-    rtsi_out_recipe_->getValue("actual_TCP_force", ft_sensor_measurements_);
-    rtsi_out_recipe_->getValue("actual_TCP_pose", tcp_pose_);
-    rtsi_out_recipe_->getValue("standard_analog_output0", standard_analog_output_[0]);
-    rtsi_out_recipe_->getValue("standard_analog_output1", standard_analog_output_[1]);
-    rtsi_out_recipe_->getValue("standard_analog_input0", standard_analog_input_[0]);
-    rtsi_out_recipe_->getValue("standard_analog_input1", standard_analog_input_[1]);
-    rtsi_out_recipe_->getValue("tool_analog_input", tool_analog_input_);
-    rtsi_out_recipe_->getValue("tool_analog_output", tool_analog_output_);
-    rtsi_out_recipe_->getValue("tool_output_voltage", tool_output_voltage_copy_);
-    rtsi_out_recipe_->getValue("tool_output_current", tool_output_current_);
-    rtsi_out_recipe_->getValue("tool_temperature", tool_temperature_);
+    joint_positions_ = rtsi_interface_->getActualJointPositions();
+    joint_velocities_ = rtsi_interface_->getActualJointVelocity();
+    joint_efforts_ = rtsi_interface_->getActualJointCurrent();
+    speed_scaling_combined_ = rtsi_interface_->getTargetSpeedScaling();
+    ft_sensor_measurements_ = rtsi_interface_->getActualTCPForce();
+    tcp_pose_ = rtsi_interface_->getActualTCPPose();
+    standard_analog_output_[0] = rtsi_interface_->getAnalogOutput(0);
+    standard_analog_output_[1] = rtsi_interface_->getAnalogOutput(1);
+    standard_analog_input_[0] = rtsi_interface_->getAnalogInput(0);
+    standard_analog_input_[1] = rtsi_interface_->getAnalogInput(1);
+    tool_analog_input_ = rtsi_interface_->getToolAnalogInput();
+    tool_analog_output_ = rtsi_interface_->getToolAnalogOutput();
+    tool_output_voltage_copy_ = rtsi_interface_->getToolOutputVoltage();
+    tool_output_current_ = rtsi_interface_->getToolOutputCurrent();
+    tool_temperature_ = rtsi_interface_->getToolOutputTemperature();
+    runtime_state_ = rtsi_interface_->getRuntimeState();
+    tool_mode_copy_ =static_cast<double>( rtsi_interface_->getToolMode());
+    tool_analog_input_type_copy_ = rtsi_interface_->getToolAnalogInputType();
+    tool_analog_output_type_copy_ = rtsi_interface_->getToolAnalogOutputType();
+    robot_mode_copy_ = static_cast<double>(rtsi_interface_->getRobotMode());
+    safety_mode_copy_ = static_cast<double>(rtsi_interface_->getSafetyStatus());
 
-    uint32_t runtime_state = 0;
-    rtsi_out_recipe_->getValue("runtime_state", runtime_state);
-    runtime_state_ = static_cast<ELITE::TaskStatus>(runtime_state);
-
-    uint32_t tool_mode = 0;
-    rtsi_out_recipe_->getValue("tool_mode", tool_mode);
-    tool_mode_copy_ = static_cast<double>(tool_mode);
-
-    uint32_t tool_analog_input_type = 0;
-    rtsi_out_recipe_->getValue("tool_analog_input_types", tool_analog_input_type);
-    tool_analog_input_type_copy_ = static_cast<double>(tool_analog_input_type);
-
-    uint32_t tool_analog_output_type = 0;
-    rtsi_out_recipe_->getValue("tool_analog_output_types", tool_analog_output_type);
-    tool_analog_output_type_copy_ = static_cast<double>(tool_analog_output_type);
-
-    int32_t robot_mode = 0;
-    rtsi_out_recipe_->getValue("robot_mode", robot_mode);
-    robot_mode_copy_ = static_cast<double>(robot_mode);
-
-    int32_t safety_mode = 0;
-    rtsi_out_recipe_->getValue("safety_status", safety_mode);
-    safety_mode_copy_ = static_cast<double>(safety_mode);
-
-    uint32_t analog_types = 0;
-    rtsi_out_recipe_->getValue("analog_io_types", analog_types);
+    uint32_t analog_types = rtsi_interface_->getAnalogIOTypes();
     std::bitset<4> analog_types_bits = analog_types;
     standard_analog_input_types_[0] = analog_types_bits[0];
     standard_analog_input_types_[1] = analog_types_bits[1];
     standard_analog_output_types_[0] = analog_types_bits[2];
     standard_analog_output_types_[1] = analog_types_bits[3];
 
-    uint32_t robot_status = 0;
-    rtsi_out_recipe_->getValue("robot_status_bits", robot_status);
+    uint32_t robot_status = rtsi_interface_->getRobotStatus();
     std::bitset<4> robot_status_bits = robot_status;
     robot_status_bits_copy_[0] = robot_status_bits[0];  // is power on
     robot_status_bits_copy_[1] = robot_status_bits[1];  // is program running
     robot_status_bits_copy_[2] = robot_status_bits[2];  // is freedrive button pressed
     robot_status_bits_copy_[3] = robot_status_bits[3];  // no use
 
-    uint32_t safety_status = 0;
-    rtsi_out_recipe_->getValue("robot_status_bits", robot_status);
+    uint32_t safety_status = rtsi_interface_->getSafetyStatusBits();
     std::bitset<11> safety_status_bits = safety_status;
     for (size_t i = 0; i < SAFETY_STATUS_BITS_NUM; i++) {
         safety_status_bits_copy_[i] = safety_status_bits[i];
     }
 
-    uint32_t input_dig_temp = 0;
-    rtsi_out_recipe_->getValue("actual_digital_input_bits", input_dig_temp);
+    uint32_t input_dig_temp = rtsi_interface_->getDigitalInputBits();
     std::bitset<ALL_DIG_GPIO_NUM> input_dig = input_dig_temp;
 
-    uint32_t output_dig_temp = 0;
-    rtsi_out_recipe_->getValue("actual_digital_output_bits", output_dig_temp);
+    uint32_t output_dig_temp = rtsi_interface_->getDigitalOutputBits();
     std::bitset<ALL_DIG_GPIO_NUM> output_dig = output_dig_temp;
 
     for (size_t i = 0; i < STANDARD_DIG_GPIO_NUM; i++) {
@@ -582,11 +513,8 @@ hardware_interface::return_type EliteCSPositionHardwareInterface::read(const rcl
 
     // If power off to power on, init some commands
     if (robot_status_bits[0] && !is_last_power_on_) {
-        if (!rtsi_interface_->receiveData(rtsi_out_recipe_, true)) {
-            RCLCPP_FATAL(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI receive data: 'fail'.");
-            return hardware_interface::return_type::ERROR;
-        }
-        rtsi_out_recipe_->getValue("actual_joint_positions", joint_positions_);
+        
+        joint_positions_ = rtsi_interface_->getActualJointPositions();
 
         position_commands_ = joint_positions_;
         velocity_commands_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
@@ -634,89 +562,85 @@ hardware_interface::return_type EliteCSPositionHardwareInterface::write(const rc
     return hardware_interface::return_type::OK;
 }
 
-bool EliteCSPositionHardwareInterface::updateStandardIO(bool* is_update) {
+bool EliteCSPositionHardwareInterface::updateStandardIO() {
     // Standard digital output
-    std::bitset<STANDARD_DIG_GPIO_NUM> standard_digital_output_mask_bits = 0;
     std::bitset<STANDARD_DIG_GPIO_NUM> standard_digital_output_bits = 0;
+    std::bitset<STANDARD_DIG_GPIO_NUM> standard_digital_output_mask_bits = 0;
     bool need_update = false;
     for (size_t i = 0; i < STANDARD_DIG_GPIO_NUM; i++) {
-        if (!std::isnan(standard_dig_out_bits_cmd_[i]) && rtsi_in_recipe_ != nullptr) {
-            standard_digital_output_mask_bits[i] = true;
+        if (!std::isnan(standard_dig_out_bits_cmd_[i])) {
             standard_digital_output_bits[i] = static_cast<bool>(standard_dig_out_bits_cmd_[i]);
+            standard_digital_output_mask_bits[i] = true;
             need_update = true;
-            *is_update = true;
         }
         standard_dig_out_bits_cmd_[i] = NO_NEW_CMD;
     }
     if (need_update) {
         uint16_t standard_digital_output_mask = static_cast<uint16_t>(standard_digital_output_mask_bits.to_ulong());
-        if (!rtsi_in_recipe_->setValue("standard_digital_output_mask", standard_digital_output_mask)) {
+        if (!rtsi_interface_->setInputRecipeValue("standard_digital_output_mask", standard_digital_output_mask)) {
             return false;
         }
-
         uint16_t standard_digital_output = static_cast<uint16_t>(standard_digital_output_bits.to_ulong());
-        if (!rtsi_in_recipe_->setValue("standard_digital_output", standard_digital_output)) {
+        if (!rtsi_interface_->setInputRecipeValue("standard_digital_output", standard_digital_output)) {
             return false;
         }
     }
     return true;
 }
 
-bool EliteCSPositionHardwareInterface::updateConfigIO(bool* is_update) {
+bool EliteCSPositionHardwareInterface::updateConfigIO() {
     // Configure digital output
-    std::bitset<CONF_DIG_GPIO_NUM> config_digital_output_mask_bits = 0;
     std::bitset<CONF_DIG_GPIO_NUM> config_digital_output_bits = 0;
+    std::bitset<CONF_DIG_GPIO_NUM> config_digital_output_mask_bits = 0;
     bool need_update = false;
     for (size_t i = 0; i < CONF_DIG_GPIO_NUM; i++) {
-        if (!std::isnan(conf_dig_out_bits_cmd_[i]) && rtsi_in_recipe_ != nullptr) {
-            config_digital_output_mask_bits[i] = true;
+        if (!std::isnan(conf_dig_out_bits_cmd_[i])) {
             config_digital_output_bits[i] = static_cast<bool>(conf_dig_out_bits_cmd_[i]);
+            config_digital_output_mask_bits[i] = true;
             need_update = true;
-            *is_update = true;
         }
         conf_dig_out_bits_cmd_[i] = NO_NEW_CMD;
     }
     if (need_update) {
-        uint8_t config_digital_output_mask = static_cast<uint8_t>(config_digital_output_mask_bits.to_ulong());
-        if (!rtsi_in_recipe_->setValue("configurable_digital_output_mask", config_digital_output_mask)) {
+        uint8_t config_digital_output_mask = config_digital_output_mask_bits.to_ulong();
+        if (!rtsi_interface_->setInputRecipeValue("configurable_digital_output_mask", config_digital_output_mask)) {
             return false;
         }
-
         uint8_t config_digital_output = static_cast<uint8_t>(config_digital_output_bits.to_ulong());
-        rtsi_in_recipe_->setValue("configurable_digital_output", config_digital_output);
+        if (!rtsi_interface_->setInputRecipeValue("configurable_digital_output", config_digital_output)) {
+            return false;
+        }
     }
     return true;
 }
 
-bool EliteCSPositionHardwareInterface::updateToolDigital(bool* is_update) {
+bool EliteCSPositionHardwareInterface::updateToolDigital() {
     // Tool digital IO
-    std::bitset<CONF_DIG_GPIO_NUM> tool_digital_output_mask_bits = 0;
     std::bitset<CONF_DIG_GPIO_NUM> tool_digital_output_bits = 0;
+    std::bitset<CONF_DIG_GPIO_NUM> tool_digital_output_mask_bits = 0;
     bool need_update = false;
     for (size_t i = 0; i < TOOL_DIG_GPIO_NUM; i++) {
-        if (!std::isnan(tool_dig_out_bits_cmd_[i]) && rtsi_in_recipe_ != nullptr) {
-            tool_digital_output_mask_bits[i] = true;
+        if (!std::isnan(tool_dig_out_bits_cmd_[i])) {
             tool_digital_output_bits[i] = static_cast<bool>(tool_dig_out_bits_cmd_[i]);
+            tool_digital_output_mask_bits[i] = true;
             need_update = true;
-            *is_update = true;
         }
         tool_dig_out_bits_cmd_[i] = NO_NEW_CMD;
     }
     if (need_update) {
         uint8_t tool_digital_output_mask = static_cast<uint8_t>(tool_digital_output_mask_bits.to_ulong());
-        if (!rtsi_in_recipe_->setValue("tool_digital_output_mask", tool_digital_output_mask)) {
+        if (!rtsi_interface_->setInputRecipeValue("tool_digital_output_mask", tool_digital_output_mask)) {
             return false;
         }
-
         uint8_t tool_digital_output = static_cast<uint8_t>(tool_digital_output_bits.to_ulong());
-        if (!rtsi_in_recipe_->setValue("tool_digital_output", tool_digital_output)) {
+        if (!rtsi_interface_->setInputRecipeValue("tool_digital_output", tool_digital_output)) {
             return false;
         }
     }
     return true;
 }
 
-bool EliteCSPositionHardwareInterface::updateStandardAnalog(bool* is_update) {
+bool EliteCSPositionHardwareInterface::updateStandardAnalog() {
     // Standard analog output
     std::bitset<STANARD_ANALOG_IO_NUM> standard_analog_output_type_bit = 0;
     std::bitset<STANARD_ANALOG_IO_NUM> standard_analog_output_mask_bit = 0;
@@ -726,62 +650,57 @@ bool EliteCSPositionHardwareInterface::updateStandardAnalog(bool* is_update) {
             standard_analog_output_type_bit[i] = static_cast<bool>(standard_analog_output_types_cmd_[i]);
             standard_analog_output_types_cmd_[i] = NO_NEW_CMD;
             need_update = true;
-            *is_update = true;
         }
         if (!std::isnan(standard_analog_output_cmd_[i])) {
             standard_analog_output_mask_bit[i] = true;
-            if (!rtsi_in_recipe_->setValue("standard_analog_output_" + std::to_string(i), standard_analog_output_cmd_[i])) {
+            if (!rtsi_interface_->setInputRecipeValue("standard_analog_output_" + std::to_string(i), standard_analog_output_cmd_[i])) {
                 return false;
             }
             standard_analog_output_cmd_[i] = NO_NEW_CMD;
             need_update = true;
-            *is_update = true;
         }
     }
     if (need_update) {
         int32_t standard_analog_output_type = static_cast<int32_t>(standard_analog_output_type_bit.to_ulong());
-        if (!rtsi_in_recipe_->setValue("standard_analog_output_type", standard_analog_output_type)) {
+        if (!rtsi_interface_->setInputRecipeValue("standard_analog_output_type", standard_analog_output_type)) {
             return false;
         }
 
         int32_t standard_analog_output_mask = static_cast<int32_t>(standard_analog_output_mask_bit.to_ulong());
-        if (rtsi_in_recipe_->setValue("standard_analog_output_mask", standard_analog_output_mask)) {
+        if (!rtsi_interface_->setInputRecipeValue("standard_analog_output_mask", standard_analog_output_mask)) {
             return false;
         }
     }
     return true;
 }
 
-bool EliteCSPositionHardwareInterface::updateToolVoltage(bool* is_update) {
+bool EliteCSPositionHardwareInterface::updateToolVoltage() {
     // Tool voltage
     bool ret = true;
     if (!std::isnan(tool_voltage_cmd_) && rtsi_interface_ != nullptr) {
         ret = eli_driver_->setToolVoltage(static_cast<ELITE::ToolVoltage>(tool_voltage_cmd_));
         tool_voltage_cmd_ = NO_NEW_CMD;
-        *is_update = true;
     }
     return ret;
 }
 
 void EliteCSPositionHardwareInterface::updateAsyncIO() {
-    if (rtsi_interface_ && !rtsi_interface_->isStarted() && rtsi_in_recipe_) {
+    if (rtsi_interface_ && !rtsi_interface_->isStarted()) {
         return;
     }
 
-    bool is_io_update = false;
-    io_async_success_ = updateStandardIO(&is_io_update) ? io_async_success_ : false;
-    io_async_success_ = updateConfigIO(&is_io_update) ? io_async_success_ : false;
-    io_async_success_ = updateToolDigital(&is_io_update) ? io_async_success_ : false;
-    io_async_success_ = updateStandardAnalog(&is_io_update) ? io_async_success_ : false;
-    io_async_success_ = updateToolVoltage(&is_io_update) ? io_async_success_ : false;
+    io_async_success_ = updateStandardIO() ? io_async_success_ : false;
+    io_async_success_ = updateConfigIO() ? io_async_success_ : false;
+    io_async_success_ = updateToolDigital() ? io_async_success_ : false;
+    io_async_success_ = updateStandardAnalog() ? io_async_success_ : false;
+    io_async_success_ = updateToolVoltage() ? io_async_success_ : false;
 
-    if (is_io_update && io_async_success_ != false) {
+    if (io_async_success_ != false) {
         io_async_success_ = true;
     }
 
     if (!std::isnan(target_speed_fraction_cmd_) && rtsi_interface_ != nullptr) {
-        if (rtsi_in_recipe_->setValue("speed_slider_mask", (int)1) &&
-            rtsi_in_recipe_->setValue("speed_slider_fraction", target_speed_fraction_cmd_)) {
+        if (rtsi_interface_->setSpeedScaling(target_speed_fraction_cmd_)) {
             scaling_async_success_ = true;
         }
         target_speed_fraction_cmd_ = NO_NEW_CMD;
@@ -832,10 +751,6 @@ void EliteCSPositionHardwareInterface::updateAsyncIO() {
         freedrive_end_cmd_ = NO_NEW_CMD;
         freedrive_activated_ = false;
         RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "Ended freedrive mode");
-    }
-
-    if (rtsi_interface_->isConnected()) {
-        rtsi_interface_->send(rtsi_in_recipe_);
     }
 }
 

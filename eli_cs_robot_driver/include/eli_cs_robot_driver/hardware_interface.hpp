@@ -22,7 +22,7 @@
 #include <hardware_interface/types/hardware_interface_return_values.hpp>
 
 #include <Elite/EliteDriver.hpp>
-#include <Elite/RtsiClientInterface.hpp>
+#include <Elite/RtsiIOInterface.hpp>
 
 namespace ELITE_CS_ROBOT_ROS_DRIVER {
 
@@ -60,9 +60,7 @@ class EliteCSPositionHardwareInterface : public hardware_interface::SystemInterf
    protected:
     ELITE::EliteDriverConfig driver_config_;
     std::unique_ptr<ELITE::EliteDriver> eli_driver_;
-    std::unique_ptr<ELITE::RtsiClientInterface> rtsi_interface_;
-    ELITE::RtsiRecipeSharedPtr rtsi_out_recipe_;
-    ELITE::RtsiRecipeSharedPtr rtsi_in_recipe_;
+    std::unique_ptr<ELITE::RtsiIOInterface> rtsi_interface_;
     std::unique_ptr<std::thread> async_thread_;
     bool async_thread_alive_;
     ELITE::TaskStatus runtime_state_;
@@ -161,16 +159,15 @@ class EliteCSPositionHardwareInterface : public hardware_interface::SystemInterf
 
     void asyncThread();
     void updateAsyncIO();
-    bool updateStandardIO(bool* is_update);
-    bool updateConfigIO(bool* is_update);
-    bool updateToolDigital(bool* is_update);
-    bool updateStandardAnalog(bool* is_update);
-    bool updateToolVoltage(bool* is_update);
+    bool updateStandardIO();
+    bool updateConfigIO();
+    bool updateToolDigital();
+    bool updateStandardAnalog();
+    bool updateToolVoltage();
 
     void extractToolPose();
     void transformForceTorque();
     bool rtsiInit(const std::string& ip);
-    std::vector<std::string> readRecipe(const std::string& recipe_file);
 
     template <const char*... Args>
     bool containsAnyOfString(const std::vector<std::string>& input) {
