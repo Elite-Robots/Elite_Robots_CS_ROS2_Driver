@@ -137,12 +137,18 @@ std::vector<hardware_interface::StateInterface> EliteCSPositionHardwareInterface
     state_interfaces.emplace_back(
         hardware_interface::StateInterface(tf_prefix + "speed_scaling", "speed_scaling_factor", &speed_scaling_combined_));
 
-    for (auto& sensor : info_.sensors) {
-        for (uint j = 0; j < sensor.state_interfaces.size(); j++) {
-            state_interfaces.emplace_back(
-                hardware_interface::StateInterface(sensor.name, sensor.state_interfaces[j].name, &ft_sensor_measurements_[j]));
-        }
-    }
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface(tf_prefix + "tcp_fts_sensor", "force.x", &ft_sensor_measurements_[0]));
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface(tf_prefix + "tcp_fts_sensor", "force.y", &ft_sensor_measurements_[1]));
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface(tf_prefix + "tcp_fts_sensor", "force.z", &ft_sensor_measurements_[2]));
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface(tf_prefix + "tcp_fts_sensor", "torque.x", &ft_sensor_measurements_[3]));
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface(tf_prefix + "tcp_fts_sensor", "torque.y", &ft_sensor_measurements_[4]));
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface(tf_prefix + "tcp_fts_sensor", "torque.z", &ft_sensor_measurements_[5]));
 
     for (size_t i = 0; i < STANDARD_DIG_GPIO_NUM; i++) {
         state_interfaces.emplace_back(hardware_interface::StateInterface(
@@ -217,6 +223,18 @@ std::vector<hardware_interface::StateInterface> EliteCSPositionHardwareInterface
 
     state_interfaces.emplace_back(
         hardware_interface::StateInterface(tf_prefix + "gpio", "task_running", &robot_task_running_copy_));
+
+    state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.x", &tcp_pose_[0]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.y", &tcp_pose_[1]));
+    state_interfaces.emplace_back(hardware_interface::StateInterface(tf_prefix + "tcp_pose", "position.z", &tcp_pose_[2]));
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.x", &tcp_rotation_quat_buffer_.x));
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.y", &tcp_rotation_quat_buffer_.y));
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.z", &tcp_rotation_quat_buffer_.z));
+    state_interfaces.emplace_back(
+        hardware_interface::StateInterface(tf_prefix + "tcp_pose", "orientation.w", &tcp_rotation_quat_buffer_.w));
 
     return state_interfaces;
 }
@@ -438,14 +456,15 @@ hardware_interface::return_type EliteCSPositionHardwareInterface::read(const rcl
     if (!rtsi_interface_ || !rtsi_interface_->isConnected()) {
         try {
             if (!rtsiInit(driver_config_.robot_ip)) {
-                RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI init fail, reinitialize in the next cycle");
+                RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"),
+                            "RTSI init fail, reinitialize in the next cycle");
                 return hardware_interface::return_type::OK;
             } else {
                 RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI init successful");
             }
-        } catch(const std::exception& e) {
+        } catch (const std::exception& e) {
             RCLCPP_INFO(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "RTSI init fail, reinitialize in the next cycle");
-            return hardware_interface::return_type::OK; 
+            return hardware_interface::return_type::OK;
         }
     }
     joint_positions_ = rtsi_interface_->getActualJointPositions();
@@ -464,7 +483,7 @@ hardware_interface::return_type EliteCSPositionHardwareInterface::read(const rcl
     tool_output_current_ = rtsi_interface_->getToolOutputCurrent();
     tool_temperature_ = rtsi_interface_->getToolOutputTemperature();
     runtime_state_ = rtsi_interface_->getRuntimeState();
-    tool_mode_copy_ =static_cast<double>( rtsi_interface_->getToolMode());
+    tool_mode_copy_ = static_cast<double>(rtsi_interface_->getToolMode());
     tool_analog_input_type_copy_ = rtsi_interface_->getToolAnalogInputType();
     tool_analog_output_type_copy_ = rtsi_interface_->getToolAnalogOutputType();
     robot_mode_copy_ = static_cast<double>(rtsi_interface_->getRobotMode());
@@ -513,7 +532,6 @@ hardware_interface::return_type EliteCSPositionHardwareInterface::read(const rcl
 
     // If power off to power on, init some commands
     if (robot_status_bits[0] && !is_last_power_on_) {
-        
         joint_positions_ = rtsi_interface_->getActualJointPositions();
 
         position_commands_ = joint_positions_;
@@ -653,7 +671,8 @@ bool EliteCSPositionHardwareInterface::updateStandardAnalog() {
         }
         if (!std::isnan(standard_analog_output_cmd_[i])) {
             standard_analog_output_mask_bit[i] = true;
-            if (!rtsi_interface_->setInputRecipeValue("standard_analog_output_" + std::to_string(i), standard_analog_output_cmd_[i])) {
+            if (!rtsi_interface_->setInputRecipeValue("standard_analog_output_" + std::to_string(i),
+                                                      standard_analog_output_cmd_[i])) {
                 return false;
             }
             standard_analog_output_cmd_[i] = NO_NEW_CMD;
@@ -770,17 +789,18 @@ void EliteCSPositionHardwareInterface::extractToolPose() {
     double tcp_angle = std::sqrt(std::pow(tcp_pose_[3], 2) + std::pow(tcp_pose_[4], 2) + std::pow(tcp_pose_[5], 2));
 
     tf2::Vector3 rotation_vec(tcp_pose_[3], tcp_pose_[4], tcp_pose_[5]);
-    tf2::Quaternion rotation;
     if (tcp_angle > 1e-16) {
-        rotation.setRotation(rotation_vec.normalized(), tcp_angle);
+        tcp_rotation_quat_.setRotation(rotation_vec.normalized(), tcp_angle);
     } else {
-        rotation.setValue(0.0, 0.0, 0.0, 1.0);  // default Quaternion is 0,0,0,0 which is invalid
+        tcp_rotation_quat_.setValue(0.0, 0.0, 0.0, 1.0);  // default Quaternion is 0,0,0,0 which is invalid
     }
     tcp_transform_.transform.translation.x = tcp_pose_[0];
     tcp_transform_.transform.translation.y = tcp_pose_[1];
     tcp_transform_.transform.translation.z = tcp_pose_[2];
 
-    tcp_transform_.transform.rotation = tf2::toMsg(rotation);
+    tcp_rotation_quat_buffer_.set(tcp_rotation_quat_);
+
+    tcp_transform_.transform.rotation = tf2::toMsg(tcp_rotation_quat_);
 }
 
 hardware_interface::return_type EliteCSPositionHardwareInterface::prepare_command_mode_switch(

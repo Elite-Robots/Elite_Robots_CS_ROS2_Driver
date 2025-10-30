@@ -27,6 +27,9 @@ controller_manager:
     freedrive_controller:
       type: eli_cs_controllers/FreedriveController
 
+    tcp_pose_broadcaster:
+      type: pose_broadcaster/PoseBroadcaster
+
 force_torque_sensor_broadcaster:
   ros__parameters:
     sensor_name: $(var tf_prefix)tcp_fts_sensor
@@ -128,3 +131,10 @@ scaled_joint_trajectory_controller:
 freedrive_controller:
   ros__parameters:
     tf_prefix: "$(var tf_prefix)"
+
+tcp_pose_broadcaster:
+  ros__parameters:
+    frame_id: $(var tf_prefix)base
+    pose_name: $(var tf_prefix)tcp_pose
+    tf:
+      child_frame_id: $(var tf_prefix)tool0_controller
