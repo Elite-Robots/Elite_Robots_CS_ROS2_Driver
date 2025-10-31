@@ -29,6 +29,23 @@ namespace ELITE_CS_ROBOT_ROS_DRIVER {
 // Other command mode
 constexpr char ELITE_HW_IF_FREEDRIVE[] = "freedrive_mode";
 
+
+struct Quaternion {
+    Quaternion() : x(0), y(0), z(0), w(0) { }
+
+    void set(const tf2::Quaternion& q) {
+        x = q.x();
+        y = q.y();
+        z = q.z();
+        w = q.w();
+    }
+
+    double x;
+    double y;
+    double z;
+    double w;
+};
+
 /**
  * @brief Handles the interface between the ROS system and the main driver.
  *
@@ -94,6 +111,8 @@ class EliteCSPositionHardwareInterface : public hardware_interface::SystemInterf
     ELITE::vector6d_t joint_efforts_;
     ELITE::vector6d_t ft_sensor_measurements_;
     ELITE::vector6d_t tcp_pose_;
+    tf2::Quaternion tcp_rotation_quat_;
+    Quaternion tcp_rotation_quat_buffer_;
     double tool_analog_input_;
     double tool_analog_output_;
     std::array<double, STANARD_ANALOG_IO_NUM> standard_analog_input_types_;
