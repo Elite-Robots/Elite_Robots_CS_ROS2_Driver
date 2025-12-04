@@ -22,10 +22,14 @@
   <depend>rclcpp</depend>
   <depend>rclcpp_lifecycle</depend>
   <depend>rclcpp_components</depend>
+  <depend>rclcpp_action</depend>
   <depend>std_srvs</depend>
   <depend>eli_dashboard_interface</depend>
   <depend>eli_common_interface</depend>
   <depend>eli_cs_robot_description</depend>
+  <depend>sensor_msgs</depend>
+  <depend>control_msgs</depend>
+  <depend>trajectory_msgs</depend>
   <depend>hardware_interface</depend>
   <depend>pluginlib</depend>
   <depend>controller_manager_msgs</depend>
