@@ -20,6 +20,10 @@ find_package(controller_manager REQUIRED)
 find_package(controller_manager_msgs REQUIRED)
 find_package(backward_ros REQUIRED)
 find_package(elite-cs-series-sdk 1.2.0 REQUIRED)
+find_package(rclcpp_action REQUIRED)
+find_package(control_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(trajectory_msgs REQUIRED)
 
 set(
   THIS_PACKAGE_DEPENDENCIES
@@ -33,6 +37,10 @@ set(
   rclcpp 
   rclcpp_components
   controller_manager_msgs
+  rclcpp_action
+  control_msgs
+  sensor_msgs
+  trajectory_msgs
 )
 
 # Add dashboard client component
@@ -188,6 +196,24 @@ install(
 install(
   DIRECTORY config launch
   DESTINATION share/${PROJECT_NAME}
+)
+
+# Install examples
+install(PROGRAMS
+  example/python/safe_joint_move.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+add_executable(
+  safe_joint_move_cpp
+  example/cpp/safe_joint_move.cpp
+)
+ament_target_dependencies(
+  safe_joint_move_cpp
+  ${THIS_PACKAGE_DEPENDENCIES}
+)
+install(
+  TARGETS safe_joint_move_cpp
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 # export
