@@ -6,16 +6,13 @@ import argparse
 import math
 import sys
 from typing import List, Optional
-
 import rclpy
 from rclpy.action import ActionClient
 from rclpy.node import Node
-
 from builtin_interfaces.msg import Duration
 from control_msgs.action import FollowJointTrajectory
 from sensor_msgs.msg import JointState
 from trajectory_msgs.msg import JointTrajectoryPoint
-
 
 JOINTS = [
     "shoulder_pan_joint",

@@ -64,6 +64,7 @@ class SdkGzBridge(Node):
         result = result_future.result().result
         self.get_logger().info(f"Controller finished with error_code={result.error_code}")
         return result.error_code == 0
+
 def _load_from_yaml(path: str) -> List[JointGoal]:
     with open(path, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f)
@@ -80,6 +81,7 @@ def _load_from_yaml(path: str) -> List[JointGoal]:
             raise ValueError("Each waypoint needs 6 joint positions")
         goals.append((list(map(float, positions)), duration))
     return goals
+
 def _example_goals() -> List[JointGoal]:
     return [
         ([0.0, -1.57, 0.0, -1.57, 0.0, 0.0], 1.5),
