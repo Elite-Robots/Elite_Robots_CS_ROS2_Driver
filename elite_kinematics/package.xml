@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>elite_kinematics</name>
+  <version>0.0.1</version>
+  <description>Custom kinematics plugin using KDL and pluginlib</description>
+
+  <maintainer email="dukang@747309172.com">Dukang</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>pluginlib</depend>
+  <depend>orocos_kdl</depend>
+  <export>
+    <!-- 告诉 pluginlib 插件描述文件在哪里 -->
+    <pluginlib plugin="${prefix}/kinematics_plugin.xml"/>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
+

@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>elite_moveit_kinematics</name>
+  <version>0.0.1</version>
+  <description>MoveIt2 kinematics adapter for elite_kinematics (KDL-based).</description>
+
+  <maintainer email="dukang@747309172.com">Dukang</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>pluginlib</depend>
+  <depend>rclcpp</depend>
+  <depend>geometry_msgs</depend>
+  <depend>tf2</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>moveit_core</depend>
+  <depend>moveit_msgs</depend>
+  <depend>kdl_parser</depend>
+  <depend>elite_kinematics</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+    <pluginlib plugin="${prefix}/kinematics_plugin_description.xml"/>
+  </export>
+</package>

@@ -1,0 +1,10 @@
+<library path="lib/libkinematics_example1">
+  <class name="elite_kinematics_/Kinematics_example1"
+         type="Kinematics_example1 "
+         base_class_type="KinematicsBase">
+    <description>
+      Custom KDL-based kinematics solver.
+    </description>
+  </class>
+</library>
+

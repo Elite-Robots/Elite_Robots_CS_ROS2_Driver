@@ -1,0 +1,7 @@
+<library path="elite_moveit_kinematics">
+  <class name="elite_moveit/EliteKinematicsPlugin_example1"
+         type="elite_moveit::EliteKinematicsPlugin_example1"
+         base_class_type="kinematics::KinematicsBase">
+    <description>MoveIt2 adapter for elite_kinematics solver.</description>
+  </class>
+</library>
