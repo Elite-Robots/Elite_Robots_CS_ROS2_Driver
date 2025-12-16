@@ -83,9 +83,9 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
 
     scaling_factor_ = read_and_clamp_scaling_factor_();
 
-    RCLCPP_INFO_THROTTLE(get_node()->get_logger(), *get_node()->get_clock(), 20000,
-                         "ScaledJointTrajectoryController speed scaling: %.3f", scaling_factor_);
-
+    // RCLCPP_INFO_THROTTLE(get_node()->get_logger(), *get_node()->get_clock(), 2000,
+    //                      "ScaledJointTrajectoryController speed scaling: %.3f", scaling_factor_);
+    //解开注释可打印当前速度缩放因子
     if (get_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE) {
         return controller_interface::return_type::OK;
     }
