@@ -362,8 +362,10 @@ hardware_interface::CallbackReturn EliteCSPositionHardwareInterface::on_configur
     // Specify lookahead time for servoing to position in joint space.
     // A longer lookahead time can smooth the trajectory.
     const double servoj_lookahead_time = stod(info_.hardware_parameters["servoj_lookahead_time"]);
-    // Time of servoj run
+    // Time of servoj run (aligned with controller update rate)
     const double servoj_time = stod(info_.hardware_parameters["servoj_time"]);
+    // Controller loop frequency, shared with RTSI and servoj timing
+    controller_update_rate_ = stod(info_.hardware_parameters["controller_update_rate"]);
 
     // const bool use_tool_communication = (info_.hardware_parameters["use_tool_communication"] == "true") ||
     //                                     (info_.hardware_parameters["use_tool_communication"] == "True");
@@ -436,7 +438,9 @@ bool EliteCSPositionHardwareInterface::rtsiInit(const std::string& ip) {
     // Path to the file containing the recipe used for requesting RTSI inputs.
     const std::string input_recipe_filename = info_.hardware_parameters["input_recipe_filename"];
 
-    rtsi_interface_ = std::make_unique<ELITE::RtsiIOInterface>(output_recipe_filename, input_recipe_filename, 125);
+    // Keep RTSI polling frequency aligned with controller update rate to avoid mismatched cycles
+    rtsi_interface_ = std::make_unique<ELITE::RtsiIOInterface>(output_recipe_filename, input_recipe_filename,
+                                                               static_cast<int>(controller_update_rate_));
     if (!rtsi_interface_->connect(ip)) {
         return false;
     }

@@ -30,6 +30,7 @@
    <xacro:arg name="reverse_port" default="50001"/>
    <xacro:arg name="script_sender_port" default="50002"/>
    <xacro:arg name="trajectory_port" default="50003"/>
+   <xacro:arg name="controller_update_rate" default="125.0"/>
    <!--   tool communication related parameters-->
    <xacro:arg name="use_tool_communication" default="false" />
    <xacro:arg name="tool_voltage" default="0" />
@@ -83,6 +84,7 @@
      script_filename="$(arg script_filename)"
      output_recipe_filename="$(arg output_recipe_filename)"
      input_recipe_filename="$(arg input_recipe_filename)"
+     controller_update_rate="$(arg controller_update_rate)"
      local_ip="$(arg local_ip)"
      script_command_port="$(arg script_command_port)"
      reverse_port="$(arg reverse_port)"

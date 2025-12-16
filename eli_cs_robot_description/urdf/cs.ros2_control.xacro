@@ -9,6 +9,7 @@
     headless_mode:=false
     initial_positions:=${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=0.0,wrist_1_joint=-1.57,wrist_2_joint=0.0,wrist_3_joint=0.0)}
     use_tool_communication:=false
+    controller_update_rate:=125.0
     script_filename
     output_recipe_filename
     input_recipe_filename
@@ -50,9 +51,10 @@
           <param name="script_command_port">${script_command_port}</param>
           <param name="trajectory_port">${trajectory_port}</param>
           <param name="tf_prefix">${tf_prefix}</param>
+          <param name="controller_update_rate">${controller_update_rate}</param>
           <param name="servoj_gain">1000</param>
           <param name="servoj_lookahead_time">0.03</param>
-          <param name="servoj_time">0.008</param>
+          <param name="servoj_time">${1.0 / controller_update_rate}</param>
           <param name="use_tool_communication">${use_tool_communication}</param>
           <param name="tool_voltage">${tool_voltage}</param>
           <param name="tool_parity">${tool_parity}</param>

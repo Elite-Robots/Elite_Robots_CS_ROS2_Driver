@@ -55,6 +55,7 @@
     script_filename:=to_be_filled_by_cs_robot_driver
     output_recipe_filename:=to_be_filled_by_cs_robot_driver
     input_recipe_filename:=to_be_filled_by_cs_robot_driver
+    controller_update_rate:=125.0
     reverse_port:=50001
     script_sender_port:=50002
     local_ip:=0.0.0.0
@@ -87,6 +88,7 @@
         script_filename="${script_filename}"
         output_recipe_filename="${output_recipe_filename}"
         input_recipe_filename="${input_recipe_filename}"
+        controller_update_rate="${controller_update_rate}"
         tf_prefix="${tf_prefix}"
         robot_ip="${robot_ip}"
         use_tool_communication="${use_tool_communication}"
