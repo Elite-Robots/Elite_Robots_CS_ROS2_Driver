@@ -199,20 +199,20 @@ install(
 )
 
 # Install examples
-install(PROGRAMS
-  example/python/safe_joint_move.py
-  DESTINATION lib/${PROJECT_NAME}
+install(
+  DIRECTORY example/python example/config/
+  DESTINATION share/${PROJECT_NAME}
 )
 add_executable(
-  safe_joint_move_cpp
-  example/cpp/safe_joint_move.cpp
+  example_safe_joint_move
+  example/cpp/example_safe_joint_move.cpp
 )
 ament_target_dependencies(
-  safe_joint_move_cpp
+  example_safe_joint_move
   ${THIS_PACKAGE_DEPENDENCIES}
 )
 install(
-  TARGETS safe_joint_move_cpp
+  TARGETS example_safe_joint_move
   DESTINATION lib/${PROJECT_NAME}
 )
 

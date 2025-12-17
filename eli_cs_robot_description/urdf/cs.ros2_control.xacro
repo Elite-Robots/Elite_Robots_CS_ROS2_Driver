@@ -21,7 +21,7 @@
     local_ip:=0.0.0.0
     script_command_port:=50004
     trajectory_port:=50003
-    robot_receive_timeout:=1.0
+    robot_receive_timeout:=0
     ">
 
     <ros2_control name="${name}" type="system">
