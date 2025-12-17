@@ -123,6 +123,7 @@ class EliteCSPositionHardwareInterface : public hardware_interface::SystemInterf
     double tool_output_voltage_copy_;
     double tool_output_current_;
     double tool_temperature_;
+    double controller_update_rate_;
 
     // copy of non double values
     std::array<double, STANDARD_DIG_GPIO_NUM> standard_dig_out_;
