@@ -5,7 +5,7 @@
    <!-- import main macro -->
    <xacro:include filename="$(find eli_cs_robot_description)/urdf/cs_macro.xacro"/>
 
-   <!-- possible 'cs_type' values: cs63, cs66, cs612, cs616, cs620, cs625 -->
+   <!-- possible 'cs_type' values: cs63, cs66, cs68, cs612, cs616, cs620, cs625 -->
    <!-- the default value should raise an error in case this was called without defining the type -->
    <xacro:arg name="cs_type" default="cs63"/>
 
