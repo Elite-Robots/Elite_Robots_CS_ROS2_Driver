@@ -1,8 +1,9 @@
 /**:
   ros__parameters:
     robot_description_kinematics:
-      cs_manipulator:
-        kinematics_solver: kdl_kinematics_plugin/KDLKinematicsPlugin
+      cs_manipulator:          #  move group 
+        kinematics_solver: elite_moveit/EliteKinematicsPlugin_example1  # 自定义插件名
         kinematics_solver_search_resolution: 0.005
         kinematics_solver_timeout: 0.005
-        kinematics_solver_attempts: 3
+        kinematics_solver_attempts: 3        # 可选
+
