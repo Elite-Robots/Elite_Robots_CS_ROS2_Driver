@@ -22,13 +22,7 @@
 
 ## Getting Started
 遵循下面的步骤以编译这个项目：
-1. 如果你的操作系统是 Ubuntu20.04、Ubuntu22.04、Ubuntu24.04，那么可以用下面的指令直接安装`elite-cs-series-sdk`:
-    ```bash
-    sudo add-apt-repository ppa:elite-robots/cs-robot-series-sdk
-    sudo apt update
-    sudo apt install elite-cs-series-sdk
-    ```
-    否则你需要使用源码编译`elite-cs-series-sdk`[（elite-cs-series-sdk项目仓库）](https://github.com/Elite-Robots/Elite_Robots_CS_SDK)。 
+1. 使用源码编译安装`elite-cs-series-sdk`[（elite-cs-series-sdk项目仓库）](https://github.com/Elite-Robots/Elite_Robots_CS_SDK)。 
 
 2. 使用下面的指令确保你的ros环境满足要求。并推荐使用下面的指令来解决依赖问题：
     ```bash
