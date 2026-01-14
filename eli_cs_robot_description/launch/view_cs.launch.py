@@ -2,7 +2,7 @@
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, PythonExpression
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
@@ -14,7 +14,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "cs_type",
             description="Type/series of used elite cs robot.",
-            choices=["cs63", "cs66", "cs66a", "cs68", "cs612", "cs616", "cs620", "cs625"],
+            choices=["cs63", "cs66", "cs66a", "cs68", "cs612", "cs616", "cs620", "cs625", "cs520h"],
         )
     )
     declared_arguments.append(
@@ -72,13 +72,24 @@ def generate_launch_description():
     # General arguments
     description_package = LaunchConfiguration("description_package")
     description_file = LaunchConfiguration("description_file")
+    description_file_resolved = PythonExpression(
+        [
+            "'../urdf_5f/cs.urdf.xacro' if ('",
+            cs_type,
+            "' == 'cs520h' and '",
+            description_file,
+            "' == 'cs.urdf.xacro') else '",
+            description_file,
+            "'",
+        ]
+    )
     tf_prefix = LaunchConfiguration("tf_prefix")
 
     robot_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare(description_package), "urdf", description_file]),
+            PathJoinSubstitution([FindPackageShare(description_package), "urdf", description_file_resolved]),
             " ",
             "safety_limits:=",
             safety_limits,

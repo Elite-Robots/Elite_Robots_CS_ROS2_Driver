@@ -25,6 +25,7 @@ def launch_setup(context, *args, **kwargs):
     description_file = LaunchConfiguration("description_file")
     moveit_config_package = LaunchConfiguration("moveit_config_package")
     moveit_joint_limits_file = LaunchConfiguration("moveit_joint_limits_file")
+    moveit_controllers_file = LaunchConfiguration("moveit_controllers_file")
     moveit_config_file = LaunchConfiguration("moveit_config_file")
     warehouse_sqlite_path = LaunchConfiguration("warehouse_sqlite_path")
     prefix = LaunchConfiguration("prefix")
@@ -33,6 +34,19 @@ def launch_setup(context, *args, **kwargs):
     launch_servo = LaunchConfiguration("launch_servo")
     publish_robot_description = LaunchConfiguration("publish_robot_description")
     publish_robot_description_semantic = LaunchConfiguration("publish_robot_description_semantic")
+
+    cs_type_value = cs_type.perform(context)
+    description_file_value = description_file.perform(context)
+    moveit_config_file_value = moveit_config_file.perform(context)
+    moveit_joint_limits_file_value = moveit_joint_limits_file.perform(context)
+    moveit_controllers_file_value = moveit_controllers_file.perform(context)
+    description_subdir = "urdf"
+    if cs_type_value.endswith("h"):
+        description_file_value = "cs.urdf.xacro"
+        moveit_config_file_value = "cs_5f.srdf.xacro"
+        moveit_joint_limits_file_value = "joint_limits_5f.yaml"
+        moveit_controllers_file_value = "controllers_5f.yaml"
+        description_subdir = "urdf_5f"
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", cs_type, "joint_limits.yaml"]
@@ -51,7 +65,9 @@ def launch_setup(context, *args, **kwargs):
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare(description_package), "urdf", description_file]),
+            PathJoinSubstitution(
+                [FindPackageShare(description_package), description_subdir, description_file_value]
+            ),
             " ",
             "robot_ip:=xxx.yyy.zzz.www",
             " ",
@@ -101,7 +117,7 @@ def launch_setup(context, *args, **kwargs):
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
             PathJoinSubstitution(
-                [FindPackageShare(moveit_config_package), "srdf", moveit_config_file]
+                [FindPackageShare(moveit_config_package), "srdf", moveit_config_file_value]
             ),
             " ",
             "name:=",
@@ -123,7 +139,7 @@ def launch_setup(context, *args, **kwargs):
     robot_description_planning = {
         "robot_description_planning": load_yaml(
             str(moveit_config_package.perform(context)),
-            os.path.join("config", str(moveit_joint_limits_file.perform(context))),
+            os.path.join("config", moveit_joint_limits_file_value),
         )
     }
 
@@ -139,7 +155,10 @@ def launch_setup(context, *args, **kwargs):
     ompl_planning_pipeline_config["move_group"].update(ompl_planning_yaml)
 
     # Trajectory Execution Configuration
-    controllers_yaml = load_yaml("eli_cs_robot_moveit_config", "config/controllers.yaml")
+    controllers_yaml = load_yaml(
+        str(moveit_config_package.perform(context)),
+        os.path.join("config", moveit_controllers_file_value),
+    )
     # the scaled_joint_trajectory_controller does not work on fake hardware
     change_controllers = context.perform_substitution(use_fake_hardware)
     if change_controllers == "true":
@@ -241,7 +260,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "cs_type",
             description="Type/series of used ELITE CS robot.",
-            choices=["cs63", "cs66", "cs68", "cs612", "cs616", "cs620", "cs625","cs66a"],
+            choices=["cs63", "cs66", "cs68", "cs612", "cs616", "cs620", "cs625", "cs66a", "cs520h"],
         )
     )
     declared_arguments.append(
@@ -285,7 +304,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "description_file",
             default_value="cs.urdf.xacro",
-            description="URDF/XACRO description file with the robot.",
+            description="URDF/XACRO description file with the robot. Overridden for 5-axis cs_type (suffix 'h').",
         )
     )
     declared_arguments.append(
@@ -300,14 +319,22 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "moveit_config_file",
             default_value="cs.srdf.xacro",
-            description="MoveIt SRDF/XACRO description file with the robot.",
+            description="MoveIt SRDF/XACRO description file with the robot. Overridden for 5-axis cs_type (suffix 'h').",
         )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
             "moveit_joint_limits_file",
             default_value="joint_limits.yaml",
-            description="MoveIt joint limits that augment or override the values from the URDF robot_description.",
+            description="MoveIt joint limits that augment or override the values from the URDF robot_description. "
+            "Overridden for 5-axis cs_type (suffix 'h').",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "moveit_controllers_file",
+            default_value="controllers.yaml",
+            description="MoveIt controller list configuration file. Overridden for 5-axis cs_type (suffix 'h').",
         )
     )
     declared_arguments.append(

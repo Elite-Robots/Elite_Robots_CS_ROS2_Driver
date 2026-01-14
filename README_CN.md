@@ -54,6 +54,7 @@
     ```bash
     ros2 launch eli_cs_robot_driver elite_control.launch.py robot_ip:=<robot ip> local_ip:=<your pc ip> cs_type:=cs66
     ```
+    如果 `cs_type` 以 `h` 结尾（五轴），启动会自动使用五轴 URDF 和控制器配置。
 
 6. 如果不以[“headless mode”](doc/ROS2Interface_CN.md#headless_mode)启动: 在机器人的任务树中挂上 ExternalControl 节点并按下示教器上的 play 键。
 

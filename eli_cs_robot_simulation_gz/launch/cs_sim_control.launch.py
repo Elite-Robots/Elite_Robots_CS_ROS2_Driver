@@ -33,22 +33,30 @@ def launch_setup(context, *args, **kwargs):
     launch_rviz = LaunchConfiguration("launch_rviz")
 
     cs_type_value = cs_type.perform(context)
+    controllers_file_value = controllers_file.perform(context)
+    description_file_value = description_file.perform(context)
+    description_subdir = "urdf"
     initial_positions_file_value = initial_positions_file_arg.perform(context)
     description_package_value = description_package.perform(context)
+    if cs_type_value.endswith("h"):
+        controllers_file_value = "cs_controllers_5f.yaml"
+        description_file_value = "cs.urdf.xacro"
+        description_subdir = "urdf_5f"
     if initial_positions_file_value:
         initial_positions_file = initial_positions_file_value
     else:
-        file_name = (
-            "initial_positions_a_type.yaml"
-            if "a" in cs_type_value
-            else "initial_positions.yaml"
-        )
+        if cs_type_value.endswith("h"):
+            file_name = "initial_positions_h_type.yaml"
+        elif "a" in cs_type_value:
+            file_name = "initial_positions_a_type.yaml"
+        else:
+            file_name = "initial_positions.yaml"
         initial_positions_file = PathJoinSubstitution(
             [FindPackageShare(description_package_value), "config", file_name]
         )
 
     initial_joint_controllers = PathJoinSubstitution(
-        [FindPackageShare(runtime_config_package), "config", controllers_file]
+        [FindPackageShare(runtime_config_package), "config", controllers_file_value]
     )
 
     rviz_config_file = PathJoinSubstitution(
@@ -60,7 +68,7 @@ def launch_setup(context, *args, **kwargs):
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
             PathJoinSubstitution(
-                [FindPackageShare(description_package), "urdf", description_file]
+                [FindPackageShare(description_package), description_subdir, description_file_value]
             ),
             " ",
             "safety_limits:=",
@@ -179,7 +187,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "cs_type",
             description="Type/series of used ELITE CS robot.",
-            choices=["cs63", "cs66", "cs612", "cs616", "cs620", "cs625","cs66a","cs68"],
+            choices=["cs63", "cs66", "cs612", "cs616", "cs620", "cs625", "cs66a", "cs68", "cs520h"],
             default_value="cs66",
         )
     )
