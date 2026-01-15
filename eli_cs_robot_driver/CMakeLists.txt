@@ -199,9 +199,10 @@ install(
 )
 
 # Install examples
-install(
-  DIRECTORY example/python example/config/
-  DESTINATION share/${PROJECT_NAME}
+install(PROGRAMS
+  example/python/example_safe_joint_move.launch.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME example_safe_joint_move_py
 )
 add_executable(
   example_safe_joint_move
