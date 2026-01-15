@@ -1,18 +1,17 @@
 from launch import LaunchDescription
-from launch.substitutions import PathJoinSubstitution
 from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
+from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
-    position_goals = PathJoinSubstitution(
-        [FindPackageShare("eli_cs_robot_driver"), "example","config", "test_goal_publishers_config.yaml"]
-    )
+    cpp_or_py = LaunchConfiguration("cpp_or_py")
+
+    cpp_or_py = LaunchConfiguration("cpp_or_py")
 
     return LaunchDescription(
         [
             Node(
-                package="ros2_controllers_test_nodes",
+                package="eli_cs_robot_driver",
                 executable="publisher_joint_trajectory_controller",
                 name="publisher_scaled_joint_trajectory_controller",
                 parameters=[position_goals],
