@@ -31,19 +31,25 @@ def _dur(sec: float) -> Duration:
 
 
 class SafeJointMove(Node):
-    def __init__(self, controller: str, target: List[float], max_vel: float, min_time: float):
+    def __init__(self):
         super().__init__("safe_joint_move")
-        self._controller = controller
-        self._target = target
-        self._max_vel = max_vel
-        self._min_time = min_time
+
+        self.declare_parameter("target", [0.0, -1.2, 0.0, -1.57, 0.0, 0.0])
+        self.declare_parameter("max_vel", 0.5)
+        self.declare_parameter("min_time", 2.0)
+        self.declare_parameter("controller", "scaled_joint_trajectory_controller")
+        
+        self._target = self.get_parameter("target").value
+        self._max_vel = self.get_parameter("max_vel").value
+        self._min_time = self.get_parameter("min_time").value
+        self._controller = self.get_parameter("controller").value
         self._current: Optional[List[float]] = None
 
         self._sub = self.create_subscription(JointState, "/joint_states", self._js_cb, 10)
         self._client = ActionClient(
             self,
             FollowJointTrajectory,
-            f"/{controller}/follow_joint_trajectory",
+            f"/{self._controller}/follow_joint_trajectory",
         )
 
     def _js_cb(self, msg: JointState):
@@ -108,47 +114,9 @@ class SafeJointMove(Node):
         return True
 
 
-def _parse(argv: List[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Send a single joint target with duration computed from max velocity."
-    )
-    parser.add_argument(
-        "--controller",
-        default="scaled_joint_trajectory_controller",
-        help="Controller name (default: scaled_joint_trajectory_controller)",
-    )
-    parser.add_argument(
-        "--target",
-        nargs=6,
-        type=float,
-        required=True,
-        metavar=("j1", "j2", "j3", "j4", "j5", "j6"),
-        help="Target joint positions (rad) for the 6 joints.",
-    )
-    parser.add_argument(
-        "--max-vel",
-        type=float,
-        default=0.5,
-        help="Max allowed joint velocity (rad/s) used to compute duration.",
-    )
-    parser.add_argument(
-        "--min-time",
-        type=float,
-        default=2.0,
-        help="Minimum trajectory duration (s) regardless of delta/max-vel.",
-    )
-    return parser.parse_args(argv)
-
-
 def main(argv=None):
-    args = _parse(argv or sys.argv[1:])
     rclpy.init()
-    node = SafeJointMove(
-        controller=args.controller,
-        target=args.target,
-        max_vel=args.max_vel,
-        min_time=args.min_time,
-    )
+    node = SafeJointMove()
     ok = node.run()
     node.destroy_node()
     rclpy.shutdown()
