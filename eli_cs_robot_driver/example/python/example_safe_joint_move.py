@@ -29,7 +29,7 @@ class SafeJointMove(Node):
         super().__init__("safe_joint_move")
 
         self.declare_parameter("controller", "scaled_joint_trajectory_controller")
-        self.declare_parameter("target", [])
+        self.declare_parameter("target")
         self.declare_parameter("max_vel", 0.5)
         self.declare_parameter("min_time", 2.0)
 
@@ -53,7 +53,7 @@ class SafeJointMove(Node):
             f"/{self._controller}/follow_joint_trajectory",
         )
 
-    def _dur(sec: float) -> Duration:
+    def _dur(self, sec: float) -> Duration:
         sec_i = int(math.floor(sec))
         nanosec = int((sec - sec_i) * 1e9)
         return Duration(sec=sec_i, nanosec=nanosec)
