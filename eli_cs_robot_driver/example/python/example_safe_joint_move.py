@@ -24,27 +24,39 @@ JOINTS = [
 ]
 
 
-def _dur(sec: float) -> Duration:
-    sec_i = int(math.floor(sec))
-    nanosec = int((sec - sec_i) * 1e9)
-    return Duration(sec=sec_i, nanosec=nanosec)
-
-
 class SafeJointMove(Node):
-    def __init__(self, controller: str, target: List[float], max_vel: float, min_time: float):
+    def __init__(self):
         super().__init__("safe_joint_move")
-        self._controller = controller
-        self._target = target
-        self._max_vel = max_vel
-        self._min_time = min_time
+
+        self.declare_parameter("controller", "scaled_joint_trajectory_controller")
+        self.declare_parameter("target")
+        self.declare_parameter("max_vel", 0.5)
+        self.declare_parameter("min_time", 2.0)
+
+        self._controller = self.get_parameter("controller").value
+        self._target = list(self.get_parameter("target").value)
+        self._max_vel = self.get_parameter("max_vel").value
+        self._min_time = self.get_parameter("min_time").value
+
+        if len(self._target) != 6:
+            raise RuntimeError("Parameter 'target' must contain exactly 6 joint values")
+
         self._current: Optional[List[float]] = None
 
-        self._sub = self.create_subscription(JointState, "/joint_states", self._js_cb, 10)
+        self._sub = self.create_subscription(
+            JointState, "/joint_states", self._js_cb, 10
+        )
+
         self._client = ActionClient(
             self,
             FollowJointTrajectory,
-            f"/{controller}/follow_joint_trajectory",
+            f"/{self._controller}/follow_joint_trajectory",
         )
+
+    def _dur(self, sec: float) -> Duration:
+        sec_i = int(math.floor(sec))
+        nanosec = int((sec - sec_i) * 1e9)
+        return Duration(sec=sec_i, nanosec=nanosec)
 
     def _js_cb(self, msg: JointState):
         name_to_pos = dict(zip(msg.name, msg.position))
@@ -83,12 +95,12 @@ class SafeJointMove(Node):
         # Start at current to avoid abrupt jump inside controller
         start = JointTrajectoryPoint()
         start.positions = list(self._current)
-        start.time_from_start = _dur(0.0)
+        start.time_from_start = self._dur(0.0)
         goal.trajectory.points.append(start)
 
         point = JointTrajectoryPoint()
         point.positions = list(self._target)
-        point.time_from_start = _dur(duration)
+        point.time_from_start = self._dur(duration)
         goal.trajectory.points.append(point)
         future = self._client.send_goal_async(goal)
         rclpy.spin_until_future_complete(self, future)
@@ -108,52 +120,10 @@ class SafeJointMove(Node):
         return True
 
 
-def _parse(argv: List[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Send a single joint target with duration computed from max velocity."
-    )
-    parser.add_argument(
-        "--controller",
-        default="scaled_joint_trajectory_controller",
-        help="Controller name (default: scaled_joint_trajectory_controller)",
-    )
-    parser.add_argument(
-        "--target",
-        nargs=6,
-        type=float,
-        required=True,
-        metavar=("j1", "j2", "j3", "j4", "j5", "j6"),
-        help="Target joint positions (rad) for the 6 joints.",
-    )
-    parser.add_argument(
-        "--max-vel",
-        type=float,
-        default=0.5,
-        help="Max allowed joint velocity (rad/s) used to compute duration.",
-    )
-    parser.add_argument(
-        "--min-time",
-        type=float,
-        default=2.0,
-        help="Minimum trajectory duration (s) regardless of delta/max-vel.",
-    )
-    return parser.parse_args(argv)
-
-
-def main(argv=None):
-    args = _parse(argv or sys.argv[1:])
+if __name__ == "__main__":
     rclpy.init()
-    node = SafeJointMove(
-        controller=args.controller,
-        target=args.target,
-        max_vel=args.max_vel,
-        min_time=args.min_time,
-    )
+    node = SafeJointMove()
     ok = node.run()
     node.destroy_node()
     rclpy.shutdown()
     sys.exit(0 if ok else 1)
-
-
-if __name__ == "__main__":
-    main()
