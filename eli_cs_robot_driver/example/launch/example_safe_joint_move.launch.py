@@ -52,7 +52,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             'min_time',
-            default_value='2.0',
+            default_value='20.0',
             description='Minimum time to reach target'
         ),
         DeclareLaunchArgument(

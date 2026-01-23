@@ -2,6 +2,24 @@
 
 namespace ELITE_CS_ROBOT_ROS_DRIVER {
 
+namespace {
+int8_t toRosTaskStatus(const ELITE::TaskStatus sdk_status) {
+    // SDK enum order: UNKNOWN=0, PLAYING=1, PAUSED=2, STOPPED=3
+    // ROS msg constants: UNKNOWN=-1, STOPPED=0, PAUSED=1, PLAYING=2
+    switch (sdk_status) {
+        case ELITE::TaskStatus::STOPPED:
+            return 0;
+        case ELITE::TaskStatus::PAUSED:
+            return 1;
+        case ELITE::TaskStatus::PLAYING:
+            return 2;
+        case ELITE::TaskStatus::UNKNOWN:
+        default:
+            return -1;
+    }
+}
+}  // namespace
+
 DashboardClient::DashboardClient(const rclcpp::NodeOptions& options) : Node("dashboard_client", options) {
     this->declare_parameter<std::string>("robot_ip", "192.168.51.244");
 
@@ -68,7 +86,7 @@ DashboardClient::DashboardClient(const rclcpp::NodeOptions& options) : Node("das
             eli_common_interface::srv::GetTaskStatus::Response::SharedPtr resp){
                 (void)req;
                 try{
-                    resp->status.status = (int8_t)client_.getTaskStatus();
+                    resp->status.status = toRosTaskStatus(client_.getTaskStatus());
                     resp->success = true;
                 } catch (const ELITE::EliteException& e) {
                     resp->success = false;
