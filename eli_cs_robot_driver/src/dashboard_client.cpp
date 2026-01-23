@@ -1,4 +1,5 @@
 #include "eli_cs_robot_driver/dashboard_client.hpp"
+#include "eli_common_interface/msg/task_status.hpp"
 
 namespace ELITE_CS_ROBOT_ROS_DRIVER {
 
@@ -8,14 +9,14 @@ int8_t toRosTaskStatus(const ELITE::TaskStatus sdk_status) {
     // ROS msg constants: UNKNOWN=-1, STOPPED=0, PAUSED=1, PLAYING=2
     switch (sdk_status) {
         case ELITE::TaskStatus::STOPPED:
-            return 0;
+            return eli_common_interface::msg::TaskStatus::STOPPED;
         case ELITE::TaskStatus::PAUSED:
-            return 1;
+            return eli_common_interface::msg::TaskStatus::PAUSED;
         case ELITE::TaskStatus::PLAYING:
-            return 2;
+            return eli_common_interface::msg::TaskStatus::PLAYING;
         case ELITE::TaskStatus::UNKNOWN:
         default:
-            return -1;
+            return eli_common_interface::msg::TaskStatus::UNKNOWN;
     }
 }
 }  // namespace
