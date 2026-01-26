@@ -565,7 +565,7 @@ hardware_interface::return_type EliteCSPositionHardwareInterface::write(const rc
     // If there is no interpreting task running on the robot, we do not want to send anything.
     if (runtime_state_ == ELITE::TaskStatus::PLAYING && is_robot_connected_) {
         if (position_controller_running_) {
-            eli_driver_->writeServoj(position_commands_, recv_timeout_ * 1000, false, false);
+            eli_driver_->writeServoj(position_commands_, recv_timeout_ * 1000, false);
 
         } else if (velocity_controller_running_) {
             eli_driver_->writeSpeedj(velocity_commands_, recv_timeout_ * 1000);
