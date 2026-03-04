@@ -467,7 +467,7 @@ bool GPIOController::setPayload(const eli_common_interface::srv::SetPayload::Req
     // reset success flag
     command_interfaces_[(int)CommandOffset::PAYLOAD_SUCCESS].set_value(ASYNC_WAITING);
 
-    command_interfaces_[(int)CommandOffset::MASS].set_value(req->mass);
+    command_interfaces_[(int)CommandOffset::MASS].set_value(static_cast<double>(req->mass));
     command_interfaces_[(int)CommandOffset::COG_X].set_value(req->center_of_gravity.x);
     command_interfaces_[(int)CommandOffset::COG_Y].set_value(req->center_of_gravity.y);
     command_interfaces_[(int)CommandOffset::COG_Z].set_value(req->center_of_gravity.z);

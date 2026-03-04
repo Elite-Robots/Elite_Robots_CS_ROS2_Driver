@@ -4,7 +4,7 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/clock.hpp"
 #include "rclcpp/qos.hpp"
-#include "rclcpp/qos_event.hpp"
+
 #include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 #include "rcpputils/split.hpp"
@@ -84,7 +84,13 @@ controller_interface::return_type SpeedScalingStateBroadcaster::update(const rcl
                                                                        const rclcpp::Duration& period) {
     if (publish_rate_ > 0.0 && period > rclcpp::Duration(1.0 / publish_rate_, 0.0)) {
         // Speed scaling is the only interface of the controller
-        speed_scaling_state_msg_.data = state_interfaces_[0].get_value() * 100.0;
+        auto value_opt = state_interfaces_[0].get_optional<double>();
+        if (value_opt.has_value()) 
+        {  speed_scaling_state_msg_.data = value_opt.value() * 100.0;} 
+        else {  
+            RCLCPP_WARN(    get_node()->get_logger(),    
+            "Speed scaling state interface has no value, publishing 0.0");  
+            speed_scaling_state_msg_.data = 0.0;}
 
         // publish
         speed_scaling_state_publisher_->publish(speed_scaling_state_msg_);

@@ -22,13 +22,7 @@ This driver is developed on top of `Elite_Robots_CS_SDK` and support some key co
 
 ## Getting Started
 For getting started, you'll basically need follow steps:
-1. If your system is Ubuntu20.04, Ubuntu22.04 or Ubuntu24.04, you can run the following command to install `elite-cs-series-sdk`:
-    ```bash
-    sudo add-apt-repository ppa:elite-robots/cs-robot-series-sdk
-    sudo apt update
-    sudo apt install elite-cs-series-sdk
-    ```
-    Else, you must install the `elite-cs-series-sdk` from [source](https://github.com/Elite-Robots/Elite_Robots_CS_SDK).
+1. Install the `elite-cs-series-sdk` from [source](https://github.com/Elite-Robots/Elite_Robots_CS_SDK).
 
 2. Ensure your ros environment. And recommended to run the following command to resolve the dependency issue:
     ```bash

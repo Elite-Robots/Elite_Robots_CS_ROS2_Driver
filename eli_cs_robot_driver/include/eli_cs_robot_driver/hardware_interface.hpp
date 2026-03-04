@@ -16,7 +16,6 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 // ros2_control hardware_interface
-#include <hardware_interface/visibility_control.h>
 #include <hardware_interface/hardware_info.hpp>
 #include <hardware_interface/system_interface.hpp>
 #include <hardware_interface/types/hardware_interface_return_values.hpp>

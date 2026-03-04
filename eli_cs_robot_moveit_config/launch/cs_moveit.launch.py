@@ -138,6 +138,50 @@ def launch_setup(context, *args, **kwargs):
     ompl_planning_yaml = load_yaml("eli_cs_robot_moveit_config", "config/ompl_planning.yaml")
     ompl_planning_pipeline_config["move_group"].update(ompl_planning_yaml)
 
+    # --- MoveIt2 planning pipeline parameter migration (MoveIt used by Jazzy) 
+    mg = ompl_planning_pipeline_config["move_group"]
+    if "planning_plugin" in mg and "planning_plugins" not in mg:
+        mg["planning_plugins"] = [mg.pop("planning_plugin")]
+    if isinstance(mg.get("request_adapters"), str):
+        _old = mg.get("request_adapters", "")
+        _tokens = [t.strip() for t in _old.split() if t.strip()]
+        _req = []
+        _resp = []
+        for t in _tokens:
+            if "ResolveConstraintFrames" in t:
+                _req.append("default_planning_request_adapters/ResolveConstraintFrames")
+            elif "FixWorkspaceBounds" in t or "ValidateWorkspaceBounds" in t:
+                _req.append("default_planning_request_adapters/ValidateWorkspaceBounds")
+            elif "FixStartStateBounds" in t or "CheckStartStateBounds" in t:
+                _req.append("default_planning_request_adapters/CheckStartStateBounds")
+            elif "FixStartStateCollision" in t or "CheckStartStateCollision" in t:
+                _req.append("default_planning_request_adapters/CheckStartStateCollision")
+            elif "AddTimeOptimalParameterization" in t:
+                _resp.append("default_planning_response_adapters/AddTimeOptimalParameterization")
+            _req = [
+                "default_planning_request_adapters/ResolveConstraintFrames",
+                "default_planning_request_adapters/ValidateWorkspaceBounds",
+                "default_planning_request_adapters/CheckStartStateBounds",
+                "default_planning_request_adapters/CheckStartStateCollision",
+            ]
+        if not _resp:
+            _resp = [
+                "default_planning_response_adapters/AddTimeOptimalParameterization",
+                "default_planning_response_adapters/ValidateSolution",
+                "default_planning_response_adapters/DisplayMotionPath",
+            ]
+        else:
+            for _d in [
+                "default_planning_response_adapters/ValidateSolution",
+                "default_planning_response_adapters/DisplayMotionPath",
+            ]:
+                if _d not in _resp:
+                    _resp.append(_d)
+
+        mg["request_adapters"] = _req
+        mg["response_adapters"] = _resp
+
+
     # Trajectory Execution Configuration
     controllers_yaml = load_yaml("eli_cs_robot_moveit_config", "config/controllers.yaml")
     # the scaled_joint_trajectory_controller does not work on fake hardware
@@ -218,11 +262,11 @@ def launch_setup(context, *args, **kwargs):
     servo_node = Node(
         package="moveit_servo",
         condition=IfCondition(launch_servo),
-        executable="servo_node_main",
+        executable="servo_node",
         parameters=[
             servo_params,
             robot_description,
-            robot_description_semantic,
+            robot_description_semantic,     
         ],
         output="screen",
     )
