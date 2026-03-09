@@ -6,8 +6,8 @@
 
 ## Requirements
 - Elite_Robots_CS_SDK
-- ROS2 - humble
-- Ubuntu22.04
+- ROS2 - jazzy
+- Ubuntu24.04
 
 
 ## 此仓库中的包
@@ -17,7 +17,6 @@
 - `eli_cs_robot_calibration` - 从真实机器人上获取标定数据的工具。
 - `eli_cs_robot_description` - Elite CS 机器人的描述文件和模型。
 - `eli_cs_robot_driver` - 与机器人通信的硬件接口、驱动。
-- `eli_cs_robot_simulation_gz` - Gazebo仿真的Elite CS机器人的配置文件和示例。
 - `eli_cs_robot_moveit_config` - Elite CS机器人的MoveIt配置与示例。
 
 ## Getting Started
