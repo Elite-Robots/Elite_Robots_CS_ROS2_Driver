@@ -1,5 +1,5 @@
 # Author: Chen Shichao
-
+# Fixes for Jazzy : Du Kang
 import os
 
 from launch_ros.actions import Node
@@ -105,8 +105,6 @@ def launch_setup(context, *args, **kwargs):
             ),
             " ",
             "name:=",
-            # Also cs_type parameter could be used but then the planning group names in yaml
-            # configs has to be updated!
             "cs",
             " ",
             "prefix:=",
@@ -116,6 +114,7 @@ def launch_setup(context, *args, **kwargs):
     )
     robot_description_semantic = {"robot_description_semantic": robot_description_semantic_content}
 
+    # 确保kinematics.yaml从moveit_config_package加载
     robot_description_kinematics = PathJoinSubstitution(
         [FindPackageShare(moveit_config_package), "config", "kinematics.yaml"]
     )
@@ -127,60 +126,28 @@ def launch_setup(context, *args, **kwargs):
         )
     }
 
-    # Planning Configuration
+    # Planning Configuration - Jazzy compatible
     ompl_planning_pipeline_config = {
         "move_group": {
-            "planning_plugin": "ompl_interface/OMPLPlanner",
-            "request_adapters": """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
-            "start_state_max_bounds_error": 0.1,
-        }
-    }
-    ompl_planning_yaml = load_yaml("eli_cs_robot_moveit_config", "config/ompl_planning.yaml")
-    ompl_planning_pipeline_config["move_group"].update(ompl_planning_yaml)
-
-    # --- MoveIt2 planning pipeline parameter migration (MoveIt used by Jazzy) 
-    mg = ompl_planning_pipeline_config["move_group"]
-    if "planning_plugin" in mg and "planning_plugins" not in mg:
-        mg["planning_plugins"] = [mg.pop("planning_plugin")]
-    if isinstance(mg.get("request_adapters"), str):
-        _old = mg.get("request_adapters", "")
-        _tokens = [t.strip() for t in _old.split() if t.strip()]
-        _req = []
-        _resp = []
-        for t in _tokens:
-            if "ResolveConstraintFrames" in t:
-                _req.append("default_planning_request_adapters/ResolveConstraintFrames")
-            elif "FixWorkspaceBounds" in t or "ValidateWorkspaceBounds" in t:
-                _req.append("default_planning_request_adapters/ValidateWorkspaceBounds")
-            elif "FixStartStateBounds" in t or "CheckStartStateBounds" in t:
-                _req.append("default_planning_request_adapters/CheckStartStateBounds")
-            elif "FixStartStateCollision" in t or "CheckStartStateCollision" in t:
-                _req.append("default_planning_request_adapters/CheckStartStateCollision")
-            elif "AddTimeOptimalParameterization" in t:
-                _resp.append("default_planning_response_adapters/AddTimeOptimalParameterization")
-            _req = [
+            "planning_plugins": ["ompl_interface/OMPLPlanner"],
+            "request_adapters": [
                 "default_planning_request_adapters/ResolveConstraintFrames",
                 "default_planning_request_adapters/ValidateWorkspaceBounds",
                 "default_planning_request_adapters/CheckStartStateBounds",
                 "default_planning_request_adapters/CheckStartStateCollision",
-            ]
-        if not _resp:
-            _resp = [
+            ],
+            "response_adapters": [
                 "default_planning_response_adapters/AddTimeOptimalParameterization",
                 "default_planning_response_adapters/ValidateSolution",
                 "default_planning_response_adapters/DisplayMotionPath",
-            ]
-        else:
-            for _d in [
-                "default_planning_response_adapters/ValidateSolution",
-                "default_planning_response_adapters/DisplayMotionPath",
-            ]:
-                if _d not in _resp:
-                    _resp.append(_d)
+            ],
+            "start_state_max_bounds_error": 0.1,
+        }
+    }
 
-        mg["request_adapters"] = _req
-        mg["response_adapters"] = _resp
-
+    # Load OMPL planning configuration
+    ompl_planning_yaml = load_yaml("eli_cs_robot_moveit_config", "config/ompl_planning.yaml")
+    ompl_planning_pipeline_config["move_group"].update(ompl_planning_yaml)
 
     # Trajectory Execution Configuration
     controllers_yaml = load_yaml("eli_cs_robot_moveit_config", "config/controllers.yaml")
@@ -266,7 +233,7 @@ def launch_setup(context, *args, **kwargs):
         parameters=[
             servo_params,
             robot_description,
-            robot_description_semantic,     
+            robot_description_semantic,
         ],
         output="screen",
     )
