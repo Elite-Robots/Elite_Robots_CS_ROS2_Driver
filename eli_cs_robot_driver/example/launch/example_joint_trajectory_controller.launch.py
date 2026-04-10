@@ -14,7 +14,7 @@ def _launch_setup(context):
         config_name = "test_goal_publishers_config.yaml"
 
     position_goals = PathJoinSubstitution(
-        [FindPackageShare("eli_cs_robot_driver"),  config_name]
+        [FindPackageShare("eli_cs_robot_driver"), "config", config_name]
     )
 
     return [

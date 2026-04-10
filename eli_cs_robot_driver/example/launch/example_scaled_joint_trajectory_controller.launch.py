@@ -16,6 +16,7 @@ def _launch_setup(context):
     position_goals = PathJoinSubstitution(
         [
             FindPackageShare("eli_cs_robot_driver"),
+            "config",
             config_name,
         ]
     )

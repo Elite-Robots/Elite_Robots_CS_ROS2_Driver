@@ -5,7 +5,7 @@ For starting the driver there are a main launch files in the `eli_cs_robot_drive
 - elite_control.launch.py - starts [ros2_control](https://control.ros.org/humble/index.html) node including hardware interface, joint state broadcaster and a controller. This launch file also starts dashboard_client if real robot is used.
 
 The arguments for launch files can be listed using `ros2 launch eli_cs_robot_driver elite_control.launch.py --show-args`. The most relevant arguments are the following:
-- `cs_type` (mandatory) - a type of used Elite CS robot(cs63, cs66, cs612, cs616, cs620, cs625).
+- `cs_type` (mandatory) - a type of used Elite CS robot (`cs63`, `cs66`, `cs66a`, `cs68`, `cs612`, `cs616`, `cs620`, `cs625`, `cs520h`).
 - `robot_ip` (mandatory) - the used robot ip which the root can be reached.
 - `local_ip` (mandatory) - the external controller ip address which robot can readched.
 - `use_fake_hardware` (default: false ) - use simple hardware emulator from [ros2_control](https://control.ros.org/humble/index.html). Useful for testing launch files, descriptions, etc. See explanation below.
@@ -20,7 +20,7 @@ The arguments for launch files can be listed using `ros2 launch eli_cs_robot_dri
 
 ## Example Commands for Testing the Driver
 
-Allowed CS robots - Type strings: `cs63`, `cs66`, `cs612`, `cs616`, `cs620`, `cs625`
+Allowed CS robots - Type strings: `cs63`, `cs66`, `cs66a`, `cs68`, `cs612`, `cs616`, `cs620`, `cs625`, `cs520h`
 
 > ***NOTE:***  
 > **These tests is a very basic. Look at the code and make sure that the robot is able to perform the motions safely before running this on a real robot!**
@@ -47,7 +47,7 @@ Before running any commands, first check the controllers’ state using `ros2 co
 
 - Send some goal to the Joint Trajectory Controller by using a demo node from ros2_controllers_test_nodes package by starting the following command in another terminal:
 ```bash
-ros2 launch eli_cs_robot_driver test_scaled_joint_trajectory_controller.launch.py
+ros2 launch eli_cs_robot_driver example_scaled_joint_trajectory_controller.launch.py
 ```
 
 After a few seconds the robot should move.
@@ -59,7 +59,7 @@ ros2 launch eli_cs_robot_driver elite_control.launch.py robot_ip:=xxx.xxx.xxx.xx
 
 And send the command using demo node:
 ```bash
-ros2 launch eli_cs_robot_driver test_joint_trajectory_controller.launch.py
+ros2 launch eli_cs_robot_driver example_joint_trajectory_controller.launch.py
 ```
 
 After a few seconds the robot should move(or jump when using emulation).
