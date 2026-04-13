@@ -51,7 +51,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "description_file",
             default_value="cs.urdf.xacro",
-            description="URDF/XACRO description file with the robot.",
+            description="URDF/XACRO description file with the robot. The default switches to urdf_5f for cs_type values ending with 'h'.",
         )
     )
     declared_arguments.append(
@@ -76,7 +76,7 @@ def generate_launch_description():
         [
             "'../urdf_5f/cs.urdf.xacro' if ('",
             cs_type,
-            "' == 'cs520h' and '",
+            "'.endswith('h') and '",
             description_file,
             "' == 'cs.urdf.xacro') else '",
             description_file,

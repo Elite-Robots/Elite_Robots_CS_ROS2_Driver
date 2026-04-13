@@ -33,19 +33,20 @@ def launch_setup(context, *args, **kwargs):
     launch_rviz = LaunchConfiguration("launch_rviz")
 
     cs_type_value = cs_type.perform(context)
+    is_5_axis = cs_type_value.endswith("h")
     controllers_file_value = controllers_file.perform(context)
     description_file_value = description_file.perform(context)
     description_subdir = "urdf"
     initial_positions_file_value = initial_positions_file_arg.perform(context)
     description_package_value = description_package.perform(context)
-    if cs_type_value.endswith("h"):
+    if is_5_axis and controllers_file_value == "cs_controllers.yaml":
         controllers_file_value = "cs_controllers_5f.yaml"
-        description_file_value = "cs.urdf.xacro"
+    if is_5_axis and description_file_value == "cs.urdf.xacro":
         description_subdir = "urdf_5f"
     if initial_positions_file_value:
         initial_positions_file = initial_positions_file_value
     else:
-        if cs_type_value.endswith("h"):
+        if is_5_axis:
             file_name = "initial_positions_h_type.yaml"
         elif "a" in cs_type_value:
             file_name = "initial_positions_a_type.yaml"
@@ -225,7 +226,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "controllers_file",
             default_value="cs_controllers.yaml",
-            description="YAML file with the controllers configuration.",
+            description="YAML file with the controllers configuration. The default switches to the 5-axis file for cs_type values ending with 'h'.",
         )
     )
     declared_arguments.append(
@@ -240,14 +241,14 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "description_file",
             default_value="cs.urdf.xacro",
-            description="URDF/XACRO description file with the robot.",
+            description="URDF/XACRO description file with the robot. The default switches to urdf_5f for cs_type values ending with 'h'.",
         )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
             "initial_positions_file",
             default_value="",
-            description='Override initial positions YAML. If empty, models with "a" use initial_positions_a_type.yaml.',
+            description='Override initial positions YAML. If empty, 5-axis models use initial_positions_h_type.yaml and "a" models use initial_positions_a_type.yaml.',
         )
     )
     declared_arguments.append(

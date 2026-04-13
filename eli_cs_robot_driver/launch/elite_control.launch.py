@@ -42,12 +42,13 @@ def launch_setup(context, *args, **kwargs):
     trajectory_port = LaunchConfiguration("trajectory_port")
 
     cs_type_value = cs_type.perform(context)
+    is_5_axis = cs_type_value.endswith("h")
     controllers_file_value = controllers_file.perform(context)
     description_file_value = description_file.perform(context)
     description_subdir = "urdf"
-    if cs_type_value.endswith("h"):
+    if is_5_axis and controllers_file_value == "elite_cs_controllers.yaml":
         controllers_file_value = "elite_cs_controllers_5f.yaml"
-        description_file_value = "cs.urdf.xacro"
+    if is_5_axis and description_file_value == "cs.urdf.xacro":
         description_subdir = "urdf_5f"
 
     joint_limit_params = PathJoinSubstitution(
@@ -386,7 +387,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "controllers_file",
             default_value="elite_cs_controllers.yaml",
-            description="YAML file with the controllers configuration. Overridden for 5-axis cs_type (suffix 'h').",
+            description="YAML file with the controllers configuration. Defaults to the 5-axis config for cs_type values ending with 'h'.",
         )
     )
     
@@ -402,7 +403,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "description_file",
             default_value="cs.urdf.xacro",
-            description="URDF/XACRO description file with the robot. Overridden for 5-axis cs_type (suffix 'h').",
+            description="URDF/XACRO description file with the robot. The default switches to urdf_5f for cs_type values ending with 'h'.",
         )
     )
     declared_arguments.append(

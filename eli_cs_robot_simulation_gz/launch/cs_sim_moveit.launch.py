@@ -23,16 +23,19 @@ def launch_setup(context, *args, **kwargs):
     prefix = LaunchConfiguration("prefix")
 
     cs_type_value = cs_type.perform(context)
+    is_5_axis = cs_type_value.endswith("h")
     controllers_file_value = controllers_file.perform(context)
     description_file_value = description_file.perform(context)
     moveit_config_file_value = moveit_config_file.perform(context)
     moveit_joint_limits_file_value = moveit_joint_limits_file.perform(context)
     moveit_controllers_file_value = moveit_controllers_file.perform(context)
-    if cs_type_value.endswith("h"):
+    if is_5_axis and controllers_file_value == "cs_controllers.yaml":
         controllers_file_value = "cs_controllers_5f.yaml"
-        description_file_value = "cs.urdf.xacro"
+    if is_5_axis and moveit_config_file_value == "cs.srdf.xacro":
         moveit_config_file_value = "cs_5f.srdf.xacro"
+    if is_5_axis and moveit_joint_limits_file_value == "joint_limits.yaml":
         moveit_joint_limits_file_value = "joint_limits_5f.yaml"
+    if is_5_axis and moveit_controllers_file_value == "controllers.yaml":
         moveit_controllers_file_value = "controllers_5f.yaml"
 
     cs_control_launch = IncludeLaunchDescription(
@@ -109,7 +112,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "controllers_file",
             default_value="cs_controllers.yaml",
-            description="YAML file with the controllers configuration. Overridden for 5-axis cs_type (suffix 'h').",
+            description="YAML file with the controllers configuration. The default switches to the 5-axis file for cs_type values ending with 'h'.",
         )
     )
     declared_arguments.append(
@@ -124,7 +127,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "description_file",
             default_value="cs.urdf.xacro",
-            description="URDF/XACRO description file with the robot. Overridden for 5-axis cs_type (suffix 'h').",
+            description="URDF/XACRO description file with the robot. The default is resolved by the downstream launch for cs_type values ending with 'h'.",
         )
     )
     declared_arguments.append(
@@ -139,21 +142,21 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "moveit_config_file",
             default_value="cs.srdf.xacro",
-            description="MoveIt SRDF/XACRO description file with the robot. Overridden for 5-axis cs_type (suffix 'h').",
+            description="MoveIt SRDF/XACRO description file with the robot. The default switches to the 5-axis SRDF for cs_type values ending with 'h'.",
         )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
             "moveit_joint_limits_file",
             default_value="joint_limits.yaml",
-            description="MoveIt joint limits file. Overridden for 5-axis cs_type (suffix 'h').",
+            description="MoveIt joint limits file. The default switches to the 5-axis file for cs_type values ending with 'h'.",
         )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
             "moveit_controllers_file",
             default_value="controllers.yaml",
-            description="MoveIt controller list configuration file. Overridden for 5-axis cs_type (suffix 'h').",
+            description="MoveIt controller list configuration file. The default switches to the 5-axis file for cs_type values ending with 'h'.",
         )
     )
     declared_arguments.append(

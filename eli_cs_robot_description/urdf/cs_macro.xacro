@@ -115,6 +115,7 @@
         <geometry>
           <xacro:get_mesh name="base" type="visual"/>
         </geometry>
+        <xacro:get_material name="base" type="visual"/>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -130,6 +131,7 @@
         <geometry>
           <xacro:get_mesh name="shoulder" type="visual"/>
         </geometry>
+        <xacro:get_material name="shoulder" type="visual"/>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -145,6 +147,7 @@
         <geometry>
           <xacro:get_mesh name="upperarm" type="visual"/>
         </geometry>
+        <xacro:get_material name="upperarm" type="visual"/>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -160,6 +163,7 @@
         <geometry>
           <xacro:get_mesh name="forearm" type="visual"/>
         </geometry>
+        <xacro:get_material name="forearm" type="visual"/>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -175,6 +179,7 @@
         <geometry>
           <xacro:get_mesh name="wrist_1" type="visual"/>
         </geometry>
+        <xacro:get_material name="wrist_1" type="visual"/>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -190,6 +195,7 @@
         <geometry>
           <xacro:get_mesh name="wrist_2" type="visual"/>
         </geometry>
+        <xacro:get_material name="wrist_2" type="visual"/>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -205,6 +211,7 @@
         <geometry>
           <xacro:get_mesh name="wrist_3" type="visual"/>
         </geometry>
+        <xacro:get_material name="wrist_3" type="visual"/>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>

@@ -65,11 +65,11 @@ joint_trajectory_controller:
     constraints:
       stopped_velocity_tolerance: 0.2
       goal_time: 0.0
-      shoulder_pan_joint: { trajectory: 0.3, goal: 0.2 }
-      shoulder_lift_joint: { trajectory: 0.3, goal: 0.2 }
-      elbow_joint: { trajectory: 0.3, goal: 0.2 }
-      wrist_1_joint: { trajectory: 0.3, goal: 0.2 }
-      wrist_2_joint: { trajectory: 0.3, goal: 0.2 }
+      shoulder_pan_joint: { trajectory: 0.4, goal: 0.2 }
+      shoulder_lift_joint: { trajectory: 0.4, goal: 0.2 }
+      elbow_joint: { trajectory: 0.4, goal: 0.2 }
+      wrist_1_joint: { trajectory: 0.4, goal: 0.2 }
+      wrist_2_joint: { trajectory: 0.4, goal: 0.2 }
 
 
 scaled_joint_trajectory_controller:
@@ -91,11 +91,11 @@ scaled_joint_trajectory_controller:
     constraints:
       stopped_velocity_tolerance: 0.2
       goal_time: 0.0
-      shoulder_pan_joint: { trajectory: 0.3, goal: 0.2 }
-      shoulder_lift_joint: { trajectory: 0.3, goal: 0.2 }
-      elbow_joint: { trajectory: 0.3, goal: 0.2 }
-      wrist_1_joint: { trajectory: 0.3, goal: 0.2 }
-      wrist_2_joint: { trajectory: 0.3, goal: 0.2 }
+      shoulder_pan_joint: { trajectory: 0.4, goal: 0.2 }
+      shoulder_lift_joint: { trajectory: 0.4, goal: 0.2 }
+      elbow_joint: { trajectory: 0.4, goal: 0.2 }
+      wrist_1_joint: { trajectory: 0.4, goal: 0.2 }
+      wrist_2_joint: { trajectory: 0.4, goal: 0.2 }
 
 forward_velocity_controller:
   ros__parameters:
