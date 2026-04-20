@@ -5,7 +5,7 @@
 - elite_control.launch.py - 启动了 [ros2_control](https://control.ros.org/humble/index.html) 节点，此节点包括： hardware interface、joint state broadcaster以及一个controller。 如果使用的是真机，此驱动程序同样会启动dashboard_client。
 
 使用 `ros2 launch eli_cs_robot_driver elite_control.launch.py --show-args`指令能看到启动文件的参数以及解释。比较经常实用的参数以及解释如下:
-- `cs_type` (mandatory) - 机器人类型（`cs63`、`cs66`、`cs66a`、`cs68`、`cs612`、`cs616`、`cs620`、`cs625`、`cs520h`）。
+- `cs_type` (mandatory) - 机器人类型（`cs63`、`cs66`、`cs66a`、`cs68`、`cs612`、`cs616`、`cs620`、`cs625`、`cs520h`）。如果类型以 `h` 结尾（五轴），launch 会自动使用五轴 URDF 和控制器配置。
 - `robot_ip` (mandatory) - 机器人FB1的IP（确保能连通）。
 - `local_ip` (mandatory) - 外部控制器的IP（确保机器人能连通）。
 - `use_fake_hardware` (default: false ) - 使用来自[ros2_control](https://control.ros.org/humble/index.html)的简单硬件模拟器。用于测试启动文件、描述等。见下面的解释。
@@ -32,7 +32,7 @@
 ```bash
 ros2 launch eli_cs_robot_driver elite_control.launch.py robot_ip:=xxx.xxx.xxx.xxx local_ip:=yyy.yyy.yyy.yyy cs_type:=zzzz
 ```
-查看参数详细内容的指令 : `ros2 launch eli_cs_robot_driver elite_control.launch.py --show-arguments`.
+查看参数详细内容的指令 : `ros2 launch eli_cs_robot_driver elite_control.launch.py --show-args`.
 
 启动launch文件后，运行机器人的任务，机器人的任务中应当包含ExternalControl EliCOs插件节点。
 
@@ -65,6 +65,8 @@ ros2 launch eli_cs_robot_driver example_joint_trajectory_controller.launch.py
 稍等片刻，机器人应该会移动。
 
 如果你想写一个自己的ros2节点来控制机器人运动, 下面是一个python的例子可以用作参考：
+
+下面的示例适用于六轴机器人。对于 `cs520h`，只使用 `shoulder_pan_joint`、`shoulder_lift_joint`、`elbow_joint`、`wrist_1_joint`、`wrist_2_joint` 这五个关节，并且每个目标点只提供五个位置值。
 ```python
 import rclpy
 from rclpy.node import Node
@@ -129,10 +131,12 @@ ros2 launch eli_cs_robot_driver elite_control.launch.py robot_ip:=xxx.xxx.xxx.xx
 
 接着启动MoveIt!节点:
 ```bash
-ros2 launch eli_cs_robot_moveit_config cs_moveit.launch.py cs_type:=cs66 launch_rviz:=true
+ros2 launch eli_cs_robot_moveit_config cs_moveit.launch.py cs_type:=zzzz launch_rviz:=true
 ```
 
 现在你应该能够在rviz2中使用MoveIt插件来规划和执行机器人的轨迹，如[这里](https://moveit.picknik.ai/main/doc/tutorials/quickstart_in_rviz/quickstart_in_rviz_tutorial.html)所述。
+
+对于 `cs520h`，MoveIt launch 会自动使用五轴 SRDF、关节限制和控制器列表。
 
 
 ## 机器人坐标系

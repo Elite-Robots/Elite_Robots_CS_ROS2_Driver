@@ -5,7 +5,7 @@ For starting the driver there are a main launch files in the `eli_cs_robot_drive
 - elite_control.launch.py - starts [ros2_control](https://control.ros.org/humble/index.html) node including hardware interface, joint state broadcaster and a controller. This launch file also starts dashboard_client if real robot is used.
 
 The arguments for launch files can be listed using `ros2 launch eli_cs_robot_driver elite_control.launch.py --show-args`. The most relevant arguments are the following:
-- `cs_type` (mandatory) - a type of used Elite CS robot (`cs63`, `cs66`, `cs66a`, `cs68`, `cs612`, `cs616`, `cs620`, `cs625`, `cs520h`).
+- `cs_type` (mandatory) - a type of used Elite CS robot (`cs63`, `cs66`, `cs66a`, `cs68`, `cs612`, `cs616`, `cs620`, `cs625`, `cs520h`). If the type ends with `h` (5-axis), the launch automatically uses the 5-axis URDF and controller configuration.
 - `robot_ip` (mandatory) - the used robot ip which the root can be reached.
 - `local_ip` (mandatory) - the external controller ip address which robot can readched.
 - `use_fake_hardware` (default: false ) - use simple hardware emulator from [ros2_control](https://control.ros.org/humble/index.html). Useful for testing launch files, descriptions, etc. See explanation below.
@@ -32,11 +32,11 @@ Allowed CS robots - Type strings: `cs63`, `cs66`, `cs66a`, `cs68`, `cs612`, `cs6
 ```bash
 ros2 launch eli_cs_robot_driver elite_control.launch.py robot_ip:=xxx.xxx.xxx.xxx local_ip:=yyy.yyy.yyy.yyy cs_type:=zzzz
 ```
-For more details check the argument documentation with : `ros2 launch eli_cs_robot_driver elite_control.launch.py --show-arguments`.
+For more details check the argument documentation with : `ros2 launch eli_cs_robot_driver elite_control.launch.py --show-args`.
 
 After starting the launch file start the ExternalControl EliCOs task from the pendant, as described above.
 
-- To use fake hardware, use use_mock_hardware argument, like:
+- To use fake hardware, use the `use_fake_hardware` argument, like:
 ```bash
 ros2 launch eli_cs_robot_driver elite_control.launch.py robot_ip:=xxx.xxx.xxx.xxx local_ip:=yyy.yyy.yyy.yyy cs_type:=zzzz use_fake_hardware:=true
 ```
@@ -65,6 +65,8 @@ ros2 launch eli_cs_robot_driver example_joint_trajectory_controller.launch.py
 After a few seconds the robot should move(or jump when using emulation).
 
 In case you want to write your own ROS node to move the robot, there is an example python node included that you can use as a start.
+
+The following example is for 6-axis robots. For `cs520h`, use only the five joints `shoulder_pan_joint`, `shoulder_lift_joint`, `elbow_joint`, `wrist_1_joint`, and `wrist_2_joint`, and provide five position values per point.
 ```python
 import rclpy
 from rclpy.node import Node
@@ -129,10 +131,12 @@ ros2 launch eli_cs_robot_driver elite_control.launch.py robot_ip:=xxx.xxx.xxx.xx
 
 And then start the MoveIt! nodes using:
 ```bash
-ros2 launch eli_cs_robot_moveit_config cs_moveit.launch.py cs_type:=cs66 launch_rviz:=true
+ros2 launch eli_cs_robot_moveit_config cs_moveit.launch.py cs_type:=zzzz launch_rviz:=true
 ```
 
 Now you should be able to use the MoveIt Plugin in rviz2 to plan and execute trajectories with the robot as explained [here](https://moveit.picknik.ai/main/doc/tutorials/quickstart_in_rviz/quickstart_in_rviz_tutorial.html).
+
+For `cs520h`, the MoveIt launch automatically uses the 5-axis SRDF, joint limits, and controller list.
 
 
 ## Robot frames

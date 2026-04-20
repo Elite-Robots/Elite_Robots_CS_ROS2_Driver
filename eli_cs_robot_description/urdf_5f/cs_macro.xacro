@@ -7,9 +7,8 @@
     expecting a flattened '.urdf' file. See the top-level '.xacro' for that
     (but note that .xacro must still be processed by the xacro command).
 
-    This file models the base kinematic chain of a CS robot, which then gets
-    parameterised by various configuration files to convert it into a CS63,
-    CS66, CS68, CS612, CS616, CS620 or CS625.
+    This file models the base kinematic chain of a 5-axis CS robot, which then
+    gets parameterised by configuration files such as CS520H.
 
     NOTE the default kinematic parameters (i.e., link lengths, frame locations,
     offsets, etc) do not correspond to any particular robot. They are defaults
@@ -19,7 +18,7 @@
     parameter MUST point to a .yaml file containing the appropriate values for
     the targeted robot.
 
-     - Chen Shichao
+     - Chen Shichao and Dukang, 2025-06
   -->
 
   <xacro:include filename="$(find eli_cs_robot_description)/urdf_5f/inc/cs_transmissions.xacro" />
