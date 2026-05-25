@@ -1,0 +1,44 @@
+kinematics:
+  # TODO: Replace these placeholders with the cs66a link-to-link transforms
+  shoulder:
+    x: 0
+    y: 0
+    z: 0.1625
+    roll: 0
+    pitch: 0
+    yaw: 0
+  upperarm:
+    x: 0
+    y: 0
+    z: 0
+    roll: 1.570796326589793
+    pitch: 0
+    yaw: 0
+  forearm:
+    x: -0.4270
+    y: 0
+    z: 0.0130
+    roll: 0
+    pitch: 0
+    yaw: 0
+  wrist_1:
+    x: 0
+    y: 0.395
+    z: 0
+    roll: -1.570796326589793
+    pitch: 0
+    yaw: 0
+  wrist_2:
+    x: 0
+    y: -0.0965
+    z: 0
+    roll: 1.570796326589793
+    pitch: 0
+    yaw: 0
+  wrist_3:
+    x: 0
+    y: 0.0950
+    z: 0
+    roll: -1.570796326589793
+    pitch: 0
+    yaw: 0

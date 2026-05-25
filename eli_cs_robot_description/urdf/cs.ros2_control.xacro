@@ -21,7 +21,7 @@
     local_ip:=0.0.0.0
     script_command_port:=50004
     trajectory_port:=50003
-    robot_receive_timeout:=0
+    robot_receive_timeout:=0.2
     ">
 
     <ros2_control name="${name}" type="system">
@@ -69,8 +69,12 @@
           <!-- initial position for the FakeSystem and simulation -->
           <param name="initial_value">${initial_positions['shoulder_pan_joint']}</param>
         </state_interface>
-        <state_interface name="velocity"/>
-        <state_interface name="effort"/>
+        <state_interface name="velocity">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="effort">
+          <param name="initial_value">0.0</param>
+        </state_interface>
       </joint>
       <joint name="${tf_prefix}shoulder_lift_joint">
         <command_interface name="position"/>
@@ -79,8 +83,12 @@
           <!-- initial position for the FakeSystem and simulation -->
           <param name="initial_value">${initial_positions['shoulder_lift_joint']}</param>
         </state_interface>
-        <state_interface name="velocity"/>
-        <state_interface name="effort"/>
+        <state_interface name="velocity">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="effort">
+          <param name="initial_value">0.0</param>
+        </state_interface>
       </joint>
       <joint name="${tf_prefix}elbow_joint">
         <command_interface name="position"/>
@@ -89,8 +97,12 @@
           <!-- initial position for the FakeSystem and simulation -->
           <param name="initial_value">${initial_positions['elbow_joint']}</param>
         </state_interface>
-        <state_interface name="velocity"/>
-        <state_interface name="effort"/>
+        <state_interface name="velocity">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="effort">
+          <param name="initial_value">0.0</param>
+        </state_interface>
       </joint>
       <joint name="${tf_prefix}wrist_1_joint">
         <command_interface name="position"/>
@@ -99,8 +111,12 @@
           <!-- initial position for the FakeSystem and simulation -->
           <param name="initial_value">${initial_positions['wrist_1_joint']}</param>
         </state_interface>
-        <state_interface name="velocity"/>
-        <state_interface name="effort"/>
+        <state_interface name="velocity">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="effort">
+          <param name="initial_value">0.0</param>
+        </state_interface>
       </joint>
       <joint name="${tf_prefix}wrist_2_joint">
         <command_interface name="position"/>
@@ -109,8 +125,12 @@
           <!-- initial position for the FakeSystem and simulation -->
           <param name="initial_value">${initial_positions['wrist_2_joint']}</param>
         </state_interface>
-        <state_interface name="velocity"/>
-        <state_interface name="effort"/>
+        <state_interface name="velocity">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="effort">
+          <param name="initial_value">0.0</param>
+        </state_interface>
       </joint>
       <joint name="${tf_prefix}wrist_3_joint">
         <command_interface name="position"/>
@@ -119,28 +139,58 @@
           <!-- initial position for the FakeSystem and simulation -->
           <param name="initial_value">${initial_positions['wrist_3_joint']}</param>
         </state_interface>
-        <state_interface name="velocity"/>
-        <state_interface name="effort"/>
+        <state_interface name="velocity">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="effort">
+          <param name="initial_value">0.0</param>
+        </state_interface>
       </joint>
 
       <xacro:unless value="${sim_gazebo or sim_ignition}">
         <sensor name="${tf_prefix}tcp_fts_sensor">
-          <state_interface name="force.x"/>
-          <state_interface name="force.y"/>
-          <state_interface name="force.z"/>
-          <state_interface name="torque.x"/>
-          <state_interface name="torque.y"/>
-          <state_interface name="torque.z"/>
+          <state_interface name="force.x">
+            <param name="initial_value">0.0</param>
+          </state_interface>
+          <state_interface name="force.y">
+            <param name="initial_value">0.0</param>
+          </state_interface>
+          <state_interface name="force.z">
+            <param name="initial_value">0.0</param>
+          </state_interface>
+          <state_interface name="torque.x">
+            <param name="initial_value">0.0</param>
+          </state_interface>
+          <state_interface name="torque.y">
+            <param name="initial_value">0.0</param>
+          </state_interface>
+          <state_interface name="torque.z">
+            <param name="initial_value">0.0</param>
+          </state_interface>
         </sensor>
 
         <sensor name="${tf_prefix}tcp_pose">
-          <state_interface name="position.x"/>
-          <state_interface name="position.y"/>
-          <state_interface name="position.z"/>
-          <state_interface name="orientation.x"/>
-          <state_interface name="orientation.y"/>
-          <state_interface name="orientation.z"/>
-          <state_interface name="orientation.w"/>
+          <state_interface name="position.x">
+            <param name="initial_value">0.0</param>
+          </state_interface>
+          <state_interface name="position.y">
+            <param name="initial_value">0.0</param>
+          </state_interface>
+          <state_interface name="position.z">
+            <param name="initial_value">0.0</param>
+          </state_interface>
+          <state_interface name="orientation.x">
+            <param name="initial_value">0.0</param>
+          </state_interface>
+          <state_interface name="orientation.y">
+            <param name="initial_value">0.0</param>
+          </state_interface>
+          <state_interface name="orientation.z">
+            <param name="initial_value">0.0</param>
+          </state_interface>
+          <state_interface name="orientation.w">
+            <param name="initial_value">1.0</param>
+          </state_interface>
         </sensor>
 
         <!-- NOTE The following are joints used only for testing with fake hardware and will change in the future -->

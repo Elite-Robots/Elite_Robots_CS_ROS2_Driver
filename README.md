@@ -47,6 +47,7 @@ For getting started, you'll basically need follow steps:
     ```bash
     ros2 launch eli_cs_robot_driver elite_control.launch.py robot_ip:=<robot ip> local_ip:=<your pc ip> cs_type:=cs66
     ```
+    If `cs_type` ends with `h` (5-axis), the launch automatically uses the 5-axis URDF and controller config.
 
 6. Unless started in [headless mode](doc/ROS2Interface.md#headless_mode): Run the task which contain ExternalControl node by pressing play on the teach pendant.
 

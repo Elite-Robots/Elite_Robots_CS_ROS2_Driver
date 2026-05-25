@@ -41,6 +41,16 @@ def launch_setup(context, *args, **kwargs):
     script_sender_port = LaunchConfiguration("script_sender_port")
     trajectory_port = LaunchConfiguration("trajectory_port")
 
+    cs_type_value = cs_type.perform(context)
+    is_5_axis = cs_type_value.endswith("h")
+    controllers_file_value = controllers_file.perform(context)
+    description_file_value = description_file.perform(context)
+    description_subdir = "urdf"
+    if is_5_axis and controllers_file_value == "elite_cs_controllers.yaml":
+        controllers_file_value = "elite_cs_controllers_5f.yaml"
+    if is_5_axis and description_file_value == "cs.urdf.xacro":
+        description_subdir = "urdf_5f"
+
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", cs_type, "joint_limits.yaml"]
     )
@@ -67,7 +77,9 @@ def launch_setup(context, *args, **kwargs):
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare(description_package), "urdf", description_file]),
+            PathJoinSubstitution(
+                [FindPackageShare(description_package), description_subdir, description_file_value]
+            ),
             " ",
             "robot_ip:=",
             robot_ip,
@@ -156,7 +168,7 @@ def launch_setup(context, *args, **kwargs):
 
     
     initial_joint_controllers = PathJoinSubstitution(
-        [FindPackageShare(runtime_config_package), "config", controllers_file]
+        [FindPackageShare(runtime_config_package), "config", controllers_file_value]
     )
     
 
@@ -325,7 +337,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "cs_type",
             description="Type/series of used Elite robot CS series.",
-            choices=[ "cs63", "cs66", "cs612", "cs616", "cs620", "cs625"],
+            choices=["cs63", "cs66", "cs68", "cs612", "cs616", "cs618f", "cs620", "cs625", "cs66a", "cs520h", "ls65"],
         )
     )
     declared_arguments.append(
@@ -375,7 +387,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "controllers_file",
             default_value="elite_cs_controllers.yaml",
-            description="YAML file with the controllers configuration.",
+            description="YAML file with the controllers configuration. Defaults to the 5-axis config for cs_type values ending with 'h'.",
         )
     )
     
@@ -391,7 +403,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "description_file",
             default_value="cs.urdf.xacro",
-            description="URDF/XACRO description file with the robot.",
+            description="URDF/XACRO description file with the robot. The default switches to urdf_5f for cs_type values ending with 'h'.",
         )
     )
     declared_arguments.append(
