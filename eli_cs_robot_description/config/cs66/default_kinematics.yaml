@@ -36,7 +36,7 @@ kinematics:
     yaw: 0
   wrist_3:
     x: 0
-    y: 0.0920
+    y: 0.0950
     z: 0
     roll: -1.570796326589793
     pitch: 0

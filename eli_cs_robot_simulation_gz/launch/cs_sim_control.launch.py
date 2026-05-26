@@ -26,13 +26,38 @@ def launch_setup(context, *args, **kwargs):
     controllers_file = LaunchConfiguration("controllers_file")
     description_package = LaunchConfiguration("description_package")
     description_file = LaunchConfiguration("description_file")
+    initial_positions_file_arg = LaunchConfiguration("initial_positions_file")
     prefix = LaunchConfiguration("prefix")
     start_joint_controller = LaunchConfiguration("start_joint_controller")
     initial_joint_controller = LaunchConfiguration("initial_joint_controller")
     launch_rviz = LaunchConfiguration("launch_rviz")
 
+    cs_type_value = cs_type.perform(context)
+    is_5_axis = cs_type_value.endswith("h")
+    controllers_file_value = controllers_file.perform(context)
+    description_file_value = description_file.perform(context)
+    description_subdir = "urdf"
+    initial_positions_file_value = initial_positions_file_arg.perform(context)
+    description_package_value = description_package.perform(context)
+    if is_5_axis and controllers_file_value == "cs_controllers.yaml":
+        controllers_file_value = "cs_controllers_5f.yaml"
+    if is_5_axis and description_file_value == "cs.urdf.xacro":
+        description_subdir = "urdf_5f"
+    if initial_positions_file_value:
+        initial_positions_file = initial_positions_file_value
+    else:
+        if is_5_axis:
+            file_name = "initial_positions_h_type.yaml"
+        elif cs_type_value.endswith("a"):
+            file_name = "initial_positions_a_type.yaml"
+        else:
+            file_name = "initial_positions.yaml"
+        initial_positions_file = PathJoinSubstitution(
+            [FindPackageShare(description_package_value), "config", file_name]
+        )
+
     initial_joint_controllers = PathJoinSubstitution(
-        [FindPackageShare(runtime_config_package), "config", controllers_file]
+        [FindPackageShare(runtime_config_package), "config", controllers_file_value]
     )
 
     rviz_config_file = PathJoinSubstitution(
@@ -44,7 +69,7 @@ def launch_setup(context, *args, **kwargs):
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
             PathJoinSubstitution(
-                [FindPackageShare(description_package), "urdf", description_file]
+                [FindPackageShare(description_package), description_subdir, description_file_value]
             ),
             " ",
             "safety_limits:=",
@@ -69,6 +94,9 @@ def launch_setup(context, *args, **kwargs):
             " ",
             "simulation_controllers:=",
             initial_joint_controllers,
+            " ",
+            "initial_positions_file:=",
+            initial_positions_file,
         ]
     )
     robot_description = {"robot_description": robot_description_content}
@@ -160,7 +188,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "cs_type",
             description="Type/series of used ELITE CS robot.",
-            choices=["cs63", "cs66", "cs612", "cs616", "cs620", "cs625"],
+            choices=["cs63", "cs66", "cs612", "cs616", "cs618f", "cs620", "cs625", "cs66a", "cs68", "cs520h", "ls65"],
             default_value="cs66",
         )
     )
@@ -198,7 +226,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "controllers_file",
             default_value="cs_controllers.yaml",
-            description="YAML file with the controllers configuration.",
+            description="YAML file with the controllers configuration. The default switches to the 5-axis file for cs_type values ending with 'h'.",
         )
     )
     declared_arguments.append(
@@ -213,7 +241,14 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "description_file",
             default_value="cs.urdf.xacro",
-            description="URDF/XACRO description file with the robot.",
+            description="URDF/XACRO description file with the robot. The default switches to urdf_5f for cs_type values ending with 'h'.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "initial_positions_file",
+            default_value="",
+            description='Override initial positions YAML. If empty, 5-axis models use initial_positions_h_type.yaml and "a" models use initial_positions_a_type.yaml.',
         )
     )
     declared_arguments.append(
