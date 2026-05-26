@@ -48,7 +48,7 @@ def launch_setup(context, *args, **kwargs):
     else:
         if is_5_axis:
             file_name = "initial_positions_h_type.yaml"
-        elif "a" in cs_type_value:
+        elif cs_type_value.endswith("a"):
             file_name = "initial_positions_a_type.yaml"
         else:
             file_name = "initial_positions.yaml"
