@@ -125,6 +125,34 @@ Restart robot safety system.
 #### *custom_request*[(eli_dashboard_interface/srv/CustomRequest)](/eli_dashboard_interface/srv/CustomRequest.srv)
 Send custom request and receive robot response
 
+## primary_client
+
+### Services
+
+#### *power_on*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
+Power on the robot through the primary port.
+
+#### *power_off*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
+Power off the robot through the primary port.
+
+#### *brake_release*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
+Release the robot brakes through the primary port.
+
+#### *pause*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
+Pause the running task through the primary port.
+
+#### *stop*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
+Stop the running task through the primary port.
+
+#### *unlock_protective_stop*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
+Cancel the protective stop through the primary port.
+
+#### *restart_safety*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
+Restart robot safety system through the primary port.
+
+#### *connect*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
+Connect to robot primary port.
+
 ## GPIO Controller
 The controller provide ditital IO publisher, tool data publisher and the like. Also provide service which can set robot IO state.
 
@@ -164,5 +192,4 @@ Set robot payload.
 
 #### *zero_ftsensor*[(std_srvs/srv/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
 Zero the ft sensor.
-
 

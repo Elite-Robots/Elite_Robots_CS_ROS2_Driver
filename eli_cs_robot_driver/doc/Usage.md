@@ -2,7 +2,7 @@
 
 ## Launch files
 For starting the driver there are a main launch files in the `eli_cs_robot_driver` package.
-- elite_control.launch.py - starts [ros2_control](https://control.ros.org/humble/index.html) node including hardware interface, joint state broadcaster and a controller. This launch file also starts dashboard_client if real robot is used.
+- elite_control.launch.py - starts [ros2_control](https://control.ros.org/humble/index.html) node including hardware interface, joint state broadcaster and a controller. This launch file also starts dashboard_client and primary_client if real robot is used.
 
 The arguments for launch files can be listed using `ros2 launch eli_cs_robot_driver elite_control.launch.py --show-args`. The most relevant arguments are the following:
 - `cs_type` (mandatory) - a type of used Elite CS robot (`cs63`, `cs66`, `cs66a`, `cs68`, `cs612`, `cs616`, `cs618f`, `cs620`, `cs625`, `cs520h`, `ls65`). If the type ends with `h` (5-axis), the launch automatically uses the 5-axis URDF and controller configuration.

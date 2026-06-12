@@ -16,7 +16,7 @@
 - `eli_cs_controllers` - Elite CS 机器人控制器的具体实现。
 - `eli_cs_robot_calibration` - 从真实机器人上获取标定数据的工具。
 - `eli_cs_robot_description` - Elite CS 机器人的描述文件和模型。
-- `eli_cs_robot_driver` - 与机器人通信的硬件接口、驱动。
+- `eli_cs_robot_driver` - 与机器人通信的硬件接口、驱动，包括dashboard_client和primary_client服务节点。
 - `eli_cs_robot_simulation_gz` - Gazebo仿真的Elite CS机器人的配置文件和示例。
 - `eli_cs_robot_moveit_config` - Elite CS机器人的MoveIt配置与示例。
 

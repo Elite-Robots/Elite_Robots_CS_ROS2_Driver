@@ -69,6 +69,32 @@ install(
   RUNTIME DESTINATION bin
 )
 
+# Add primary client component
+add_library(primary_client_component SHARED src/primary_client.cpp)
+target_link_libraries(
+  primary_client_component
+  elite-cs-series-sdk
+)
+target_include_directories(
+  primary_client_component
+  PRIVATE
+  include
+)
+ament_target_dependencies(primary_client_component ${THIS_PACKAGE_DEPENDENCIES})
+rclcpp_components_register_node(
+  primary_client_component
+  PLUGIN "ELITE_CS_ROBOT_ROS_DRIVER::PrimaryClient"
+  EXECUTABLE primary_client
+)
+ament_export_targets(export_primary_client_component)
+install(
+  TARGETS primary_client_component
+  EXPORT export_primary_client_component
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
 # Add script sender component
 add_library(script_node_component SHARED src/script_node.cpp)
 target_link_libraries(
@@ -103,6 +129,7 @@ add_executable(
 target_link_libraries(
   eli_components_loader
   script_node_component
+  primary_client_component
   dashboard_client_component
   elite-cs-series-sdk
 )

@@ -1,4 +1,5 @@
 #include "eli_cs_robot_driver/dashboard_client.hpp"
+#include "eli_cs_robot_driver/primary_client.hpp"
 #include "eli_cs_robot_driver/script_node.hpp"
 
 #include "rclcpp/rclcpp.hpp"
@@ -21,7 +22,15 @@ int main(int argc, char **argv) {
     rclcpp::NodeOptions options;
 
     auto dashboard_node = std::make_shared<ELITE_CS_ROBOT_ROS_DRIVER::DashboardClient>(options);
-    exec.add_node(dashboard_node);
+    if (dashboard_node->isConnected()) {
+        exec.add_node(dashboard_node);
+    } else {
+        RCLCPP_WARN(rclcpp::get_logger("eli_components_loader"), "Skip dashboard_client because dashboard connection failed.");
+        dashboard_node.reset();
+    }
+
+    auto primary_node = std::make_shared<ELITE_CS_ROBOT_ROS_DRIVER::PrimaryClient>(options);
+    exec.add_node(primary_node);
 
     auto script_node = std::make_shared<ELITE_CS_ROBOT_ROS_DRIVER::ScriptNode>(options);
     exec.add_node(script_node);
