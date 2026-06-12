@@ -126,6 +126,34 @@ p {
 #### *custom_request*[(eli_dashboard_interface/srv/CustomRequest)](/eli_dashboard_interface/srv/CustomRequest.srv)
 发送自定义指令并且接收回复。
 
+## primary_client
+
+### 服务
+
+#### *power_on*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
+通过 Primary 端口开启机器人电机。
+
+#### *power_off*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
+通过 Primary 端口关闭机器人电机。
+
+#### *brake_release*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
+通过 Primary 端口释放抱闸。
+
+#### *pause*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
+通过 Primary 端口暂停当前任务。
+
+#### *stop*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
+通过 Primary 端口停止当前任务。
+
+#### *unlock_protective_stop*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
+通过 Primary 端口解除保护停止。
+
+#### *restart_safety*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
+通过 Primary 端口重启安全系统。
+
+#### *connect*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
+连接机器人 Primary 端口。
+
 ## GPIO 控制器
 控制器提供数字 IO 发布器、工具数据发布器等功能，同时还提供可以设置机器人 IO 状态的服务。
 

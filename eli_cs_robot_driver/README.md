@@ -13,7 +13,7 @@
 
 &emsp;&emsp;Custom script snippets can be sent to the robot on a topic basis. By default, they will interrupt other programs (such as the one controlling the robot). For a certain subset of functions, it is however possible to send them as secondary programs. See [Elite documentation](https://www.eliterobots.com/downloads) on details.
 
-&emsp;&emsp;Note: If enbale remote control, the robot won't accept script code from a remote source unless the robot is put into remote_control-mode. However, if put into remote_control-mode, the program containing the ExternalControl task node can't be started from the panel. For this purpose, please use the dashboard services to load, start and stop the main task running on the robot. See the [ROS-API documentation](../doc/ROS2Interface.md) for details on the dashboard services.
+&emsp;&emsp;Note: If enbale remote control, the robot won't accept script code from a remote source unless the robot is put into remote_control-mode. However, if put into remote_control-mode, the program containing the ExternalControl task node can't be started from the panel. For this purpose, please use the dashboard services to load, start and stop the main task running on the robot. Basic robot control commands such as power on, power off, brake release, pause, stop, protective stop unlock, and safety restart are also available through the primary_client services over the Primary port. See the [ROS-API documentation](../doc/ROS2Interface.md) for details on the dashboard and primary services.
 
 &emsp;&emsp;This driver is using ROS-Control for any control statements. Therefore, it can be used with all position-based controllers available in ROS-Control. However, we recommend using the controllers from the eli_cs_controllers package. See it's [documentation](../eli_cs_controllers/README.md) for details. Note: Speed scaling support will only be available using the controllers from eli_cs_controllers.
 
@@ -27,7 +27,7 @@ The term mode is used in different meanings inside this driver.
 The **remote control mode** is needed for many aspects of this driver such as
  * headless mode (see below)
  * sending script code to the robot
- * many dashboard functionalities such as
+ * many dashboard and primary functionalities such as
    * restarting the robot after protective / EM-Stop
    * powering on the robot and do brake release
    * loading and starting programs

@@ -2,7 +2,7 @@
 
 ## Launch files
 在`eli_cs_robot_driver`包中有一个启动文件来启动CS系列机器人的驱动程序：
-- elite_control.launch.py - 启动了 [ros2_control](https://control.ros.org/humble/index.html) 节点，此节点包括： hardware interface、joint state broadcaster以及一个controller。 如果使用的是真机，此驱动程序同样会启动dashboard_client。
+- elite_control.launch.py - 启动了 [ros2_control](https://control.ros.org/humble/index.html) 节点，此节点包括： hardware interface、joint state broadcaster以及一个controller。 如果使用的是真机，此驱动程序同样会启动dashboard_client和primary_client。
 
 使用 `ros2 launch eli_cs_robot_driver elite_control.launch.py --show-args`指令能看到启动文件的参数以及解释。比较经常实用的参数以及解释如下:
 - `cs_type` (mandatory) - 机器人类型（`cs63`、`cs66`、`cs66a`、`cs68`、`cs612`、`cs616`、`cs618f`、`cs620`、`cs625`、`cs520h`、`ls65`）。如果类型以 `h` 结尾（五轴），launch 会自动使用五轴 URDF 和控制器配置。

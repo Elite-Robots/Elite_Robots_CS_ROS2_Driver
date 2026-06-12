@@ -1,4 +1,5 @@
 #include "eli_cs_robot_driver/dashboard_client.hpp"
+#include "eli_cs_robot_driver/primary_client.hpp"
 #include "eli_cs_robot_driver/script_node.hpp"
 
 #include "rclcpp/rclcpp.hpp"
@@ -22,6 +23,9 @@ int main(int argc, char **argv) {
 
     auto dashboard_node = std::make_shared<ELITE_CS_ROBOT_ROS_DRIVER::DashboardClient>(options);
     exec.add_node(dashboard_node);
+
+    auto primary_node = std::make_shared<ELITE_CS_ROBOT_ROS_DRIVER::PrimaryClient>(options);
+    exec.add_node(primary_node);
 
     auto script_node = std::make_shared<ELITE_CS_ROBOT_ROS_DRIVER::ScriptNode>(options);
     exec.add_node(script_node);
