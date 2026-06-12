@@ -497,11 +497,10 @@ hardware_interface::return_type EliteCSPositionHardwareInterface::read(const rcl
     standard_analog_output_types_[1] = analog_types_bits[3];
 
     uint32_t robot_status = rtsi_interface_->getRobotStatus();
-    std::bitset<4> robot_status_bits = robot_status;
+    std::bitset<3> robot_status_bits = robot_status;
     robot_status_bits_copy_[0] = robot_status_bits[0];  // is power on
     robot_status_bits_copy_[1] = robot_status_bits[1];  // is program running
     robot_status_bits_copy_[2] = robot_status_bits[2];  // is freedrive button pressed
-    robot_status_bits_copy_[3] = robot_status_bits[3];  // no use
 
     uint32_t safety_status = rtsi_interface_->getSafetyStatusBits();
     std::bitset<11> safety_status_bits = safety_status;
@@ -551,7 +550,6 @@ hardware_interface::return_type EliteCSPositionHardwareInterface::read(const rcl
 
     // required transforms
     extractToolPose();
-    transformForceTorque();
 
     system_interface_initialized_ = 1.0;
     robot_task_running_copy_ = ((runtime_state_ == ELITE::TaskStatus::PLAYING) && is_robot_connected_);
@@ -773,34 +771,9 @@ void EliteCSPositionHardwareInterface::updateAsyncIO() {
     }
 }
 
-void EliteCSPositionHardwareInterface::transformForceTorque() {
-    tcp_force_.setValue(ft_sensor_measurements_[0], ft_sensor_measurements_[1], ft_sensor_measurements_[2]);
-    tcp_torque_.setValue(ft_sensor_measurements_[3], ft_sensor_measurements_[4], ft_sensor_measurements_[5]);
-
-    tf2::Quaternion rotation_quat;
-    tf2::fromMsg(tcp_transform_.transform.rotation, rotation_quat);
-    tcp_force_ = tf2::quatRotate(rotation_quat.inverse(), tcp_force_);
-    tcp_torque_ = tf2::quatRotate(rotation_quat.inverse(), tcp_torque_);
-
-    ft_sensor_measurements_ = {tcp_force_.x(), tcp_force_.y(), tcp_force_.z(), tcp_torque_.x(), tcp_torque_.y(), tcp_torque_.z()};
-}
-
 void EliteCSPositionHardwareInterface::extractToolPose() {
-    double tcp_angle = std::sqrt(std::pow(tcp_pose_[3], 2) + std::pow(tcp_pose_[4], 2) + std::pow(tcp_pose_[5], 2));
-
-    tf2::Vector3 rotation_vec(tcp_pose_[3], tcp_pose_[4], tcp_pose_[5]);
-    if (tcp_angle > 1e-16) {
-        tcp_rotation_quat_.setRotation(rotation_vec.normalized(), tcp_angle);
-    } else {
-        tcp_rotation_quat_.setValue(0.0, 0.0, 0.0, 1.0);  // default Quaternion is 0,0,0,0 which is invalid
-    }
-    tcp_transform_.transform.translation.x = tcp_pose_[0];
-    tcp_transform_.transform.translation.y = tcp_pose_[1];
-    tcp_transform_.transform.translation.z = tcp_pose_[2];
-
+    tcp_rotation_quat_.setRPY(tcp_pose_[3], tcp_pose_[4], tcp_pose_[5]);
     tcp_rotation_quat_buffer_.set(tcp_rotation_quat_);
-
-    tcp_transform_.transform.rotation = tf2::toMsg(tcp_rotation_quat_);
 }
 
 hardware_interface::return_type EliteCSPositionHardwareInterface::prepare_command_mode_switch(

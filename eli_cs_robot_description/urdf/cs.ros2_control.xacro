@@ -329,7 +329,6 @@
           <state_interface name="robot_status_bit_0"/>
           <state_interface name="robot_status_bit_1"/>
           <state_interface name="robot_status_bit_2"/>
-          <state_interface name="robot_status_bit_3"/>
 
           <state_interface name="safety_mode"/>
           <state_interface name="safety_status_bit_0"/>

@@ -49,7 +49,7 @@ private:
     static constexpr int TOOL_DIG_GPIO_NUM = 4;
     static constexpr int SAFETY_STATUS_BITS_NUM = 11;
     static constexpr int STANARD_ANALOG_IO_NUM = 2;
-    static constexpr int ROBOT_STATUS_BITS_NUM = 4;
+    static constexpr int ROBOT_STATUS_BITS_NUM = 3;
     static constexpr int ALL_DIG_GPIO_NUM = STANDARD_DIG_GPIO_NUM + CONF_DIG_GPIO_NUM + TOOL_DIG_GPIO_NUM;
     
     enum class StateOffset {
