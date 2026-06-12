@@ -46,6 +46,7 @@ class DashboardClient : public rclcpp::Node {
     rclcpp::Service<eli_dashboard_interface::srv::CustomRequest>::SharedPtr custom_request_service_;
 
     ELITE::DashboardClient client_;
+    bool is_connected_ = false;
 
     rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr createTriggerService(const std::string& name, std::function<bool()> func) {
         return this->create_service<std_srvs::srv::Trigger>(name, [&, func](const std_srvs::srv::Trigger::Request::SharedPtr req,
@@ -63,6 +64,7 @@ class DashboardClient : public rclcpp::Node {
    public:
     DashboardClient(const rclcpp::NodeOptions& options);
     ~DashboardClient();
+    bool isConnected() const;
 };
 
 
