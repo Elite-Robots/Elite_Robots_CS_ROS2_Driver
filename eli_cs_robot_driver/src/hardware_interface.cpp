@@ -23,11 +23,13 @@ EliteCSPositionHardwareInterface::~EliteCSPositionHardwareInterface() {
     on_cleanup(rclcpp_lifecycle::State());
 }
 
-hardware_interface::CallbackReturn EliteCSPositionHardwareInterface::on_init(const hardware_interface::HardwareInfo& system_info) {
-    if (hardware_interface::SystemInterface::on_init(system_info) != hardware_interface::CallbackReturn::SUCCESS) {
+hardware_interface::CallbackReturn EliteCSPositionHardwareInterface::on_init(
+    const hardware_interface::HardwareComponentInterfaceParams& params) {
+    if (hardware_interface::SystemInterface::on_init(params) != hardware_interface::CallbackReturn::SUCCESS) {
         return hardware_interface::CallbackReturn::ERROR;
     }
 
+    const auto& system_info = params.hardware_info;
     info_ = system_info;
 
     // initialize

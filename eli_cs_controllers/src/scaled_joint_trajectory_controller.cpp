@@ -1,4 +1,5 @@
 #include <memory>
+#include <limits>
 #include <vector>
 
 #include "eli_cs_controllers/scaled_joint_trajectory_controller.hpp"
@@ -35,7 +36,7 @@ controller_interface::CallbackReturn ScaledJointTrajectoryController::on_activat
 controller_interface::return_type ScaledJointTrajectoryController::update(const rclcpp::Time& time,
                                                                           const rclcpp::Duration& period) {
     if (state_interfaces_.back().get_name() == scaled_params_.speed_scaling_interface_name) {
-        scaling_factor_ = state_interfaces_.back().get_value();
+        scaling_factor_ = state_interfaces_.back().get_optional().value_or(std::numeric_limits<double>::quiet_NaN());
     } else {
         RCLCPP_ERROR(get_node()->get_logger(), "Speed scaling interface (%s) not found in hardware interface.",
                      scaled_params_.speed_scaling_interface_name.c_str());
@@ -165,8 +166,8 @@ controller_interface::return_type ScaledJointTrajectoryController::update(const 
                     // Update PIDs
                     for (auto i = 0ul; i < dof_; ++i) {
                         tmp_command_[i] = (state_desired_.velocities[i] * ff_velocity_scale_[i]) +
-                                          pids_[i]->computeCommand(state_error_.positions[i], state_error_.velocities[i],
-                                                                   (uint64_t)period.nanoseconds());
+                                          pids_[i]->compute_command(state_error_.positions[i], state_error_.velocities[i],
+                                                                    period.nanoseconds());
                     }
                 }
 

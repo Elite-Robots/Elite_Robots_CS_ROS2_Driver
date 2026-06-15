@@ -54,7 +54,8 @@ class EliteCSPositionHardwareInterface : public hardware_interface::SystemInterf
     RCLCPP_SHARED_PTR_DEFINITIONS(EliteCSPositionHardwareInterface)
     virtual ~EliteCSPositionHardwareInterface();
 
-    hardware_interface::CallbackReturn on_init(const hardware_interface::HardwareInfo& system_info) final;
+    hardware_interface::CallbackReturn on_init(
+        const hardware_interface::HardwareComponentInterfaceParams& params) final;
 
     std::vector<hardware_interface::StateInterface> export_state_interfaces() final;
 

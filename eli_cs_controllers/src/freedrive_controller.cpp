@@ -1,9 +1,20 @@
 #include "eli_cs_controllers/freedrive_controller.hpp"
 
+#include <limits>
 #include <lifecycle_msgs/msg/state.hpp>
 #include <rclcpp/logging.hpp>
+#include <tuple>
 
 namespace ELITE_CS_CONTROLLER {
+namespace {
+double getInterfaceValue(const hardware_interface::LoanedCommandInterface& interface) {
+    return interface.get_optional().value_or(std::numeric_limits<double>::quiet_NaN());
+}
+
+void setInterfaceValue(hardware_interface::LoanedCommandInterface& interface, double value) {
+    std::ignore = interface.set_value(value);
+}
+}  // namespace
 
 controller_interface::CallbackReturn FreedriveController::on_init() {
     try {
@@ -121,7 +132,7 @@ controller_interface::CallbackReturn FreedriveController::on_activate(const rclc
 
 controller_interface::CallbackReturn FreedriveController::on_cleanup(const rclcpp_lifecycle::State& /*previous_state*/) {
     if (end_interface_.has_value()) {
-        end_interface_->get().set_value(1.0);
+        setInterfaceValue(end_interface_->get(), 1.0);
         return controller_interface::CallbackReturn::SUCCESS;
     } else {
         RCLCPP_ERROR(get_node()->get_logger(), "Not init to end command interface.");
@@ -138,7 +149,7 @@ controller_interface::CallbackReturn FreedriveController::on_deactivate(const rc
 controller_interface::return_type FreedriveController::update(const rclcpp::Time& /*time*/, const rclcpp::Duration& /*period*/) {
     if (is_new_request_) {
         if (is_freedrive_active_) {
-            if (end_interface_.has_value() && end_interface_->get().get_value() == 1.0) {
+            if (end_interface_.has_value() && getInterfaceValue(end_interface_->get()) == 1.0) {
                 RCLCPP_INFO(get_node()->get_logger(), "Freedrive mode end by hardware, ending request.");
                 is_freedrive_active_ = false;
                 return controller_interface::return_type::OK;
@@ -146,13 +157,13 @@ controller_interface::return_type FreedriveController::update(const rclcpp::Time
                 RCLCPP_INFO(get_node()->get_logger(), "Received command to start Freedrive Mode.");
 
                 // Set command interface to enable
-                start_interface_->get().set_value(1.0);
+                setInterfaceValue(start_interface_->get(), 1.0);
             }
 
         } else {
             RCLCPP_INFO(get_node()->get_logger(), "Received command to stop Freedrive Mode.");
 
-            end_interface_->get().set_value(1.0);
+            setInterfaceValue(end_interface_->get(), 1.0);
         }
         is_new_request_ = false;
     }
