@@ -8,7 +8,7 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "eli_cs_controllers/scaled_joint_trajectory_controller_parameters.hpp"
-
+#include <tuple>
 namespace ELITE_CS_CONTROLLER {
 class ScaledJointTrajectoryController : public joint_trajectory_controller::JointTrajectoryController {
    public:
@@ -49,7 +49,7 @@ class ScaledJointTrajectoryController : public joint_trajectory_controller::Join
     template <typename T>
     void assign_interface_from_point(const T& joint_interface, const std::vector<double>& trajectory_point_interface) {
         for (size_t index = 0; index < dof_; ++index) {
-            joint_interface[index].get().set_value(trajectory_point_interface[index]);
+            std::ignore = joint_interface[index].get().set_value(trajectory_point_interface[index]);
         }
     }
 };

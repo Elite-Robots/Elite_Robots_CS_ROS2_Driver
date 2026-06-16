@@ -479,17 +479,10 @@ bool GPIOController::setPayload(const eli_common_interface::srv::SetPayload::Req
     // reset success flag
     setInterfaceValue(command_interfaces_[(int)CommandOffset::PAYLOAD_SUCCESS], ASYNC_WAITING);
 
-<<<<<<< Updated upstream
-    command_interfaces_[(int)CommandOffset::MASS].set_value(static_cast<double>(req->mass));
-    command_interfaces_[(int)CommandOffset::COG_X].set_value(req->center_of_gravity.x);
-    command_interfaces_[(int)CommandOffset::COG_Y].set_value(req->center_of_gravity.y);
-    command_interfaces_[(int)CommandOffset::COG_Z].set_value(req->center_of_gravity.z);
-=======
     setInterfaceValue(command_interfaces_[(int)CommandOffset::MASS], static_cast<double>(req->mass));
     setInterfaceValue(command_interfaces_[(int)CommandOffset::COG_X], req->center_of_gravity.x);
     setInterfaceValue(command_interfaces_[(int)CommandOffset::COG_Y], req->center_of_gravity.y);
     setInterfaceValue(command_interfaces_[(int)CommandOffset::COG_Z], req->center_of_gravity.z);
->>>>>>> Stashed changes
 
     if (!waitForAsyncCommand([&]() { return getInterfaceValue(command_interfaces_[(int)CommandOffset::PAYLOAD_SUCCESS]); })) {
         RCLCPP_WARN(get_node()->get_logger(),
