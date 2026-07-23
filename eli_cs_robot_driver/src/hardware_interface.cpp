@@ -786,14 +786,9 @@ void EliteCSPositionHardwareInterface::transformForceTorque() {
 }
 
 void EliteCSPositionHardwareInterface::extractToolPose() {
-    double tcp_angle = std::sqrt(std::pow(tcp_pose_[3], 2) + std::pow(tcp_pose_[4], 2) + std::pow(tcp_pose_[5], 2));
+    tcp_rotation_quat_.setRPY(tcp_pose_[3], tcp_pose_[4], tcp_pose_[5]);
+    tcp_rotation_quat_.normalize();
 
-    tf2::Vector3 rotation_vec(tcp_pose_[3], tcp_pose_[4], tcp_pose_[5]);
-    if (tcp_angle > 1e-16) {
-        tcp_rotation_quat_.setRotation(rotation_vec.normalized(), tcp_angle);
-    } else {
-        tcp_rotation_quat_.setValue(0.0, 0.0, 0.0, 1.0);  // default Quaternion is 0,0,0,0 which is invalid
-    }
     tcp_transform_.transform.translation.x = tcp_pose_[0];
     tcp_transform_.transform.translation.y = tcp_pose_[1];
     tcp_transform_.transform.translation.z = tcp_pose_[2];
