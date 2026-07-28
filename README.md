@@ -11,14 +11,14 @@ This driver is developed on top of `Elite_Robots_CS_SDK` and support some key co
 
 
 ## Packages in the Repository
-- `eli_common_interface` - some common service or message interface.
-- `eli_dashboard_interface` - package defining messages used by dashboard node.
-- `eli_cs_controllers` - implementations of controllers specific for Elite CS robots.
-- `eli_cs_robot_calibration` - tool for extracting calibration information from a real robot.
-- `eli_cs_robot_description` - description files and meshes for Elite CS Robots manipulators. 
-- `eli_cs_robot_driver` - driver / hardware interface for communication with Elite CS robots, including dashboard_client and primary_client service nodes.
+- `elite_robots_msgs` - some common service or message interface.
+- `elite_robots_dashboard_msgs` - package defining messages used by dashboard node.
+- `elite_robots_controllers` - implementations of controllers specific for Elite CS robots.
+- `elite_robots_calibration` - tool for extracting calibration information from a real robot.
+- `elite_robots_description` - description files and meshes for Elite CS Robots manipulators. 
+- `elite_robots_driver` - driver / hardware interface for communication with Elite CS robots, including dashboard_client and primary_client service nodes.
 - `eli_cs_robot_simulation_gz` - Example files and configurations for Gazebo simulation of Elite CS Robots' manipulators.
-- `eli_cs_robot_moveit_config` - example MoveIt configuration for Elite CS robots.
+- `elite_robots_moveit_config` - example MoveIt configuration for Elite CS robots.
 
 ## Getting Started
 For getting started, you'll basically need follow steps:
@@ -44,9 +44,9 @@ For getting started, you'll basically need follow steps:
     . install/setup.bash
     ```
 
-5. **Start the driver. See the [usage](eli_cs_robot_driver/doc/Usage.md) documentation for details**
+5. **Start the driver. See the [usage](elite_robots_driver/doc/Usage.md) documentation for details**
     ```bash
-    ros2 launch eli_cs_robot_driver elite_control.launch.py robot_ip:=<robot ip> local_ip:=<your pc ip> cs_type:=cs66
+    ros2 launch elite_robots_driver elite_control.launch.py robot_ip:=<robot ip> local_ip:=<your pc ip> cs_type:=cs66
     ```
     If `cs_type` ends with `h` (5-axis), the launch automatically uses the 5-axis URDF and controller config.
 

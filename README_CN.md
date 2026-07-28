@@ -11,14 +11,14 @@
 
 
 ## 此仓库中的包
-- `eli_common_interface` - 定义了一些共用的服务或消息接口。
-- `eli_dashboard_interface` - 定义了dashboard节点会用到的消息接口。 
-- `eli_cs_controllers` - Elite CS 机器人控制器的具体实现。
-- `eli_cs_robot_calibration` - 从真实机器人上获取标定数据的工具。
-- `eli_cs_robot_description` - Elite CS 机器人的描述文件和模型。
-- `eli_cs_robot_driver` - 与机器人通信的硬件接口、驱动，包括dashboard_client和primary_client服务节点。
+- `elite_robots_msgs` - 定义了一些共用的服务或消息接口。
+- `elite_robots_dashboard_msgs` - 定义了dashboard节点会用到的消息接口。 
+- `elite_robots_controllers` - Elite CS 机器人控制器的具体实现。
+- `elite_robots_calibration` - 从真实机器人上获取标定数据的工具。
+- `elite_robots_description` - Elite CS 机器人的描述文件和模型。
+- `elite_robots_driver` - 与机器人通信的硬件接口、驱动，包括dashboard_client和primary_client服务节点。
 - `eli_cs_robot_simulation_gz` - Gazebo仿真的Elite CS机器人的配置文件和示例。
-- `eli_cs_robot_moveit_config` - Elite CS机器人的MoveIt配置与示例。
+- `elite_robots_moveit_config` - Elite CS机器人的MoveIt配置与示例。
 
 ## Getting Started
 遵循下面的步骤以编译这个项目：
@@ -44,9 +44,9 @@
     . install/setup.bash
     ```
 
-5. **使用下面指令来启动机器人的ros驱动. 更多详细内容可以参考 [usage](eli_cs_robot_driver/doc/Usage_CN.md) 文档**
+5. **使用下面指令来启动机器人的ros驱动. 更多详细内容可以参考 [usage](elite_robots_driver/doc/Usage_CN.md) 文档**
     ```bash
-    ros2 launch eli_cs_robot_driver elite_control.launch.py robot_ip:=<robot ip> local_ip:=<your pc ip> cs_type:=cs66
+    ros2 launch elite_robots_driver elite_control.launch.py robot_ip:=<robot ip> local_ip:=<your pc ip> cs_type:=cs66
     ```
     如果 `cs_type` 以 `h` 结尾（五轴），启动会自动使用五轴 URDF 和控制器配置。
 

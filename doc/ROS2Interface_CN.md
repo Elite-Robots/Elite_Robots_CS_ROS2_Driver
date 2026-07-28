@@ -87,34 +87,34 @@ p {
 #### *quit*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
 退出并断开连接。
 
-#### *popup*[eli_dashboard_interface/srv/Popup](/eli_dashboard_interface/srv/Popup.srv)
+#### *popup*[elite_robots_dashboard_msgs/srv/Popup](/elite_robots_dashboard_msgs/srv/Popup.srv)
 弹出消息框并显示指定的文本，或者关闭最新的弹出消息框。
 
-#### *log*[(eli_dashboard_interface/srv/Log)](/eli_dashboard_interface/srv/Log.srv)
+#### *log*[(elite_robots_dashboard_msgs/srv/Log)](/elite_robots_dashboard_msgs/srv/Log.srv)
 添加日志信息。
 
-#### *get_task_status*[(eli_common_interface/srv/GetTaskStatus)](/eli_common_interface/srv/GetTaskStatus.srv)
+#### *get_task_status*[(elite_robots_msgs/srv/GetTaskStatus)](/elite_robots_msgs/srv/GetTaskStatus.srv)
 获取当前任务的状态。
 
-#### *is_task_saved*[(eli_dashboard_interface/srv/IsSaved)](/eli_dashboard_interface/srv/IsSaved.srv)
+#### *is_task_saved*[(elite_robots_dashboard_msgs/srv/IsSaved)](/elite_robots_dashboard_msgs/srv/IsSaved.srv)
 当前任务是否已保存。
 
-#### *is_configuration_saved*[(eli_dashboard_interface/srv/IsSaved)](/eli_dashboard_interface/srv/IsSaved.srv)
+#### *is_configuration_saved*[(elite_robots_dashboard_msgs/srv/IsSaved)](/elite_robots_dashboard_msgs/srv/IsSaved.srv)
 当前配置是否已保存。
 
-#### *robot_mode*[(eli_common_interface/srv/GetRobotMode)](/eli_common_interface/srv/GetRobotMode.srv)
+#### *robot_mode*[(elite_robots_msgs/srv/GetRobotMode)](/elite_robots_msgs/srv/GetRobotMode.srv)
 获取机器人当前模式。
 
-#### *get_safety_mode*[(eli_common_interface/srv/GetSafetyMode)](/eli_common_interface/srv/GetSafetyMode.srv)
+#### *get_safety_mode*[(elite_robots_msgs/srv/GetSafetyMode)](/elite_robots_msgs/srv/GetSafetyMode.srv)
 获取机器人当前的安全模式。
 
 #### *get_task_path*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
 获取当前加载任务文件的相对路径（如果任务未保存，则视为未加载文件，未保存的文件没有明确路径）。
 
-#### *load_configure*[(eli_dashboard_interface/srv/Load)](/eli_dashboard_interface/srv/Load.srv)
+#### *load_configure*[(elite_robots_dashboard_msgs/srv/Load)](/elite_robots_dashboard_msgs/srv/Load.srv)
 加载指定路径的配置文件。
 
-#### *load_task*[(eli_dashboard_interface/srv/Load)](/eli_dashboard_interface/srv/Load.srv)
+#### *load_task*[(elite_robots_dashboard_msgs/srv/Load)](/elite_robots_dashboard_msgs/srv/Load.srv)
 加载指定路径的任务文件。
 
 #### *connect*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
@@ -123,7 +123,7 @@ p {
 #### *restart_safety*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
 重启安全系统。
 
-#### *custom_request*[(eli_dashboard_interface/srv/CustomRequest)](/eli_dashboard_interface/srv/CustomRequest.srv)
+#### *custom_request*[(elite_robots_dashboard_msgs/srv/CustomRequest)](/elite_robots_dashboard_msgs/srv/CustomRequest.srv)
 发送自定义指令并且接收回复。
 
 ## primary_client
@@ -159,16 +159,16 @@ p {
 
 ### 发布器
 
-#### *io_states*[(eli_common_interface/msg/IOState)](/eli_common_interface/msg/IOState.msg)
+#### *io_states*[(elite_robots_msgs/msg/IOState)](/elite_robots_msgs/msg/IOState.msg)
 标准配置和工具数字 IO 状态。
 
-#### *tool_data*[(eli_common_interface/msg/ToolData)](/eli_common_interface/msg/ToolData.msg)
+#### *tool_data*[(elite_robots_msgs/msg/ToolData)](/elite_robots_msgs/msg/ToolData.msg)
 包含模式、输出电压等的工具数据。
 
-#### *robot_mode*[(eli_common_interface/msg/RobotMode)](/eli_common_interface/msg/RobotMode.msg)
+#### *robot_mode*[(elite_robots_msgs/msg/RobotMode)](/elite_robots_msgs/msg/RobotMode.msg)
 机器人的模式。
 
-#### *safety_mode*[(eli_common_interface/msg/SafetyMode)](/eli_common_interface/msg/SafetyMode.msg)
+#### *safety_mode*[(elite_robots_msgs/msg/SafetyMode)](/elite_robots_msgs/msg/SafetyMode.msg)
 机器人的安全模式。
 
 #### *robot_task_running*[(std_msgs/msg/Bool)](https://docs.ros.org/en/api/std_msgs/html/msg/Bool.html)
@@ -176,10 +176,10 @@ p {
 
 ### 服务
 
-#### *set_io*[(eli_common_interface/srv/SetIO)](/eli_common_interface/srv/SetIO.srv)
+#### *set_io*[(elite_robots_msgs/srv/SetIO)](/elite_robots_msgs/srv/SetIO.srv)
 设置标准配置、工具数字 IO。
 
-#### *set_speed_slider*[(eli_common_interface/srv/SetSpeedSliderFraction)](/eli_common_interface/srv/SetSpeedSliderFraction.srv)
+#### *set_speed_slider*[(elite_robots_msgs/srv/SetSpeedSliderFraction)](/elite_robots_msgs/srv/SetSpeedSliderFraction.srv)
 设置机器人速度滑块。
 
 #### *resend_external_script*[(std_srvs/srv/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
@@ -188,7 +188,7 @@ p {
 #### *hand_back_control*[(std_srvs/srv/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
 退出外部控制脚本并交还控制。
 
-#### *set_payload*[(eli_common_interface/srv/SetPayload)](/eli_common_interface/srv/SetPayload.srv)
+#### *set_payload*[(elite_robots_msgs/srv/SetPayload)](/elite_robots_msgs/srv/SetPayload.srv)
 设置机器人负载。
 
 #### *zero_ftsensor*[(std_srvs/srv/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
