@@ -131,7 +131,7 @@ ros2 launch elite_robots_driver elite_control.launch.py robot_ip:=xxx.xxx.xxx.xx
 
 接着启动MoveIt!节点:
 ```bash
-ros2 launch elite_robots_moveit_config cs_moveit.launch.py cs_type:=zzzz launch_rviz:=true
+ros2 launch elite_robots_moveit_config elite_moveit.launch.py cs_type:=zzzz launch_rviz:=true
 ```
 
 现在你应该能够在rviz2中使用MoveIt插件来规划和执行机器人的轨迹，如[这里](https://moveit.picknik.ai/main/doc/tutorials/quickstart_in_rviz/quickstart_in_rviz_tutorial.html)所述。
