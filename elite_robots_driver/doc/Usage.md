@@ -131,7 +131,7 @@ ros2 launch elite_robots_driver elite_control.launch.py robot_ip:=xxx.xxx.xxx.xx
 
 And then start the MoveIt! nodes using:
 ```bash
-ros2 launch elite_robots_moveit_config cs_moveit.launch.py cs_type:=zzzz launch_rviz:=true
+ros2 launch elite_robots_moveit_config elite_moveit.launch.py cs_type:=zzzz launch_rviz:=true
 ```
 
 Now you should be able to use the MoveIt Plugin in rviz2 to plan and execute trajectories with the robot as explained [here](https://moveit.picknik.ai/main/doc/tutorials/quickstart_in_rviz/quickstart_in_rviz_tutorial.html).
