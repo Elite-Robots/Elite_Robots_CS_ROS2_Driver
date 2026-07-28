@@ -1,0 +1,22 @@
+<library path="elite_robots_controllers">
+  <class name="elite_robots_controllers/SpeedScalingStateBroadcaster" type="ELITE_CS_CONTROLLER::SpeedScalingStateBroadcaster" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      This controller publishes the readings of all available speed scaling factors.
+    </description>
+  </class>
+  <class name="elite_robots_controllers/ScaledJointTrajectoryController" type="ELITE_CS_CONTROLLER::ScaledJointTrajectoryController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Scaled position-based joint trajectory controller.
+    </description>
+  </class>
+  <class name="elite_robots_controllers/GPIOController" type="ELITE_CS_CONTROLLER::GPIOController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+      This controller publishes the Tool IO.
+    </description>
+  </class>
+  <class name="elite_robots_controllers/FreedriveController" type="ELITE_CS_CONTROLLER::FreedriveController" base_class_type="controller_interface::ControllerInterface">
+    <description>
+       This controller handles the activation of the freedrive mode.
+    </description>
+  </class>
+</library>
