@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>elite_robots_controllers</name>
-  <version>0.0.0</version>
+  <version>1.0.0</version>
   <description>Provides controllers that use the speed scaling interface of Elite CS series robots.</description>
   <maintainer email="yanxiaojia@elibot.cn">cc</maintainer>
   <license>Apache-2.0</license>

@@ -15,7 +15,6 @@
 - `elite_robots_dashboard_msgs` - 定义了dashboard节点会用到的消息接口。 
 - `elite_robots_controllers` - Elite CS 机器人控制器的具体实现。
 - `elite_robots_calibration` - 从真实机器人上获取标定数据的工具。
-- `eli_cs_robot_description` - Elite CS 机器人的描述文件和模型。
 - `elite_robots_driver` - 与机器人通信的硬件接口、驱动。
 - `elite_robots_moveit_config` - Elite CS机器人的MoveIt配置与示例。
 

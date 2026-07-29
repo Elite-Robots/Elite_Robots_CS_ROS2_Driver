@@ -15,7 +15,6 @@ This driver is developed on top of `Elite_Robots_CS_SDK` and support some key co
 - `elite_robots_dashboard_msgs` - package defining messages used by dashboard node.
 - `elite_robots_controllers` - implementations of controllers specific for Elite CS robots.
 - `elite_robots_calibration` - tool for extracting calibration information from a real robot.
-- `eli_cs_robot_description` - description files and meshes for Elite CS Robots manipulators. 
 - `elite_robots_driver` - driver / hardware interface for communication with Elite CS robots.
 - `elite_robots_moveit_config` - example MoveIt configuration for Elite CS robots.
 
