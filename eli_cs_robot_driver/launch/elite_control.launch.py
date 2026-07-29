@@ -29,11 +29,6 @@ def launch_setup(context, *args, **kwargs):
     activate_joint_controller = LaunchConfiguration("activate_joint_controller")
     launch_rviz = LaunchConfiguration("launch_rviz")
     headless_mode = LaunchConfiguration("headless_mode")
-    use_tool_communication = LaunchConfiguration("use_tool_communication")
-    tool_parity = LaunchConfiguration("tool_parity")
-    tool_baud_rate = LaunchConfiguration("tool_baud_rate")
-    tool_stop_bits = LaunchConfiguration("tool_stop_bits")
-    tool_tcp_port = LaunchConfiguration("tool_tcp_port")
     tool_voltage = LaunchConfiguration("tool_voltage")
     local_ip = LaunchConfiguration("local_ip")
     script_command_port = LaunchConfiguration("script_command_port")
@@ -128,21 +123,6 @@ def launch_setup(context, *args, **kwargs):
             " ",
             "headless_mode:=",
             headless_mode,
-            " ",
-            "use_tool_communication:=",
-            use_tool_communication,
-            " ",
-            "tool_parity:=",
-            tool_parity,
-            " ",
-            "tool_baud_rate:=",
-            tool_baud_rate,
-            " ",
-            "tool_stop_bits:=",
-            tool_stop_bits,
-            " ",
-            "tool_tcp_port:=",
-            tool_tcp_port,
             " ",
             "tool_voltage:=",
             tool_voltage,
@@ -319,7 +299,6 @@ def launch_setup(context, *args, **kwargs):
         control_node,
         eli_control_node,
         components_loader,
-        # tool_communication_node,
         controller_stopper_node,
         robot_state_publisher_node,
         rviz_node,
@@ -460,46 +439,6 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument("launch_rviz", default_value="true", description="Launch RViz?")
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "use_tool_communication",
-            default_value="false",
-            description="Temporarily unavailable.", # TODO
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "tool_parity",
-            default_value="0",
-            description="Temporarily unavailable. Parity configuration for serial communication. Only effective, if \
-            use_tool_communication is set to True.", # TODO
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "tool_baud_rate",
-            default_value="115200",
-            description="Temporarily unavailable. Baud rate configuration for serial communication. Only effective, if \
-            use_tool_communication is set to True.", #TODO
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "tool_stop_bits",
-            default_value="1",
-            description="Temporarily unavailable. Stop bits configuration for serial communication. Only effective, if \
-            use_tool_communication is set to True.", # TODO
-        )
-    )
-
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "tool_tcp_port",
-            default_value="54321",
-            description="Temporarily unavailable. Remote port that will be used for bridging the tool's serial device. \
-            Only effective, if use_tool_communication is set to True.", #TODO
-        )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
