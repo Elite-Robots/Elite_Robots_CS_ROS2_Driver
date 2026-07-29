@@ -5,7 +5,7 @@
 - elite_control.launch.py - 启动了 [ros2_control](https://control.ros.org/humble/index.html) 节点，此节点包括： hardware interface、joint state broadcaster以及一个controller。 如果使用的是真机，此驱动程序同样会启动dashboard_client和primary_client。
 
 使用 `ros2 launch eli_cs_robot_driver elite_control.launch.py --show-args`指令能看到启动文件的参数以及解释。比较经常实用的参数以及解释如下:
-- `cs_type` (mandatory) - 机器人类型（`cs63`、`cs66`、`cs66a`、`cs68`、`cs612`、`cs616`、`cs618f`、`cs620`、`cs625`、`cs520h`、`ls65`）。如果类型以 `h` 结尾（五轴），launch 会自动使用五轴 URDF 和控制器配置。
+- `cs_type` (mandatory) - 机器人类型（`cs63`、`cs66`、`cs66a`、`cs68`、`cs612`、`cs616`、`cs618f`、`cs620`、`cs625`、`cs630`、`cs520h`、`ls65`）。如果类型以 `h` 结尾（五轴），launch 会自动使用五轴 URDF 和控制器配置。
 - `robot_ip` (mandatory) - 机器人FB1的IP（确保能连通）。
 - `local_ip` (mandatory) - 外部控制器的IP（确保机器人能连通）。
 - `use_fake_hardware` (default: false ) - 使用来自[ros2_control](https://control.ros.org/humble/index.html)的简单硬件模拟器。用于测试启动文件、描述等。见下面的解释。
@@ -20,7 +20,7 @@
 
 ## 测试驱动的指令
 
-可以使用的CS机器人类型 - `cs63`, `cs66`, `cs66a`, `cs68`, `cs612`, `cs616`, `cs618f`, `cs620`, `cs625`, `cs520h`, `ls65`
+可以使用的CS机器人类型 - `cs63`, `cs66`, `cs66a`, `cs68`, `cs612`, `cs616`, `cs618f`, `cs620`, `cs625`, `cs630`, `cs520h`, `ls65`
 
 > ***注意:***  
 > **这是一个非常基础的测试，如果使用的是真实的机器人，在运行前请确保周围环境安全。**

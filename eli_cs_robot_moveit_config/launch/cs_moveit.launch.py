@@ -175,8 +175,8 @@ def launch_setup(context, *args, **kwargs):
 
     trajectory_execution = {
         "moveit_manage_controllers": False,
-        "trajectory_execution.allowed_execution_duration_scaling": 1.2,
-        "trajectory_execution.allowed_goal_duration_margin": 0.5,
+        "trajectory_execution.allowed_execution_duration_scaling": 10.0,
+        "trajectory_execution.allowed_goal_duration_margin": 20.0,
         "trajectory_execution.allowed_start_tolerance": 0.01,
     }
 
@@ -263,7 +263,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "cs_type",
             description="Type/series of used ELITE CS robot.",
-            choices=["cs63", "cs66", "cs68", "cs612", "cs616", "cs618f", "cs620", "cs625", "cs66a", "cs520h", "ls65"],
+            choices=["cs63", "cs66", "cs68", "cs612", "cs616", "cs618f", "cs620", "cs625", "cs630", "cs66a", "cs520h", "ls65"],
         )
     )
     declared_arguments.append(
