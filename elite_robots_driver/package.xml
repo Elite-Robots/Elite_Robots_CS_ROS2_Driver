@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>elite_robots_driver</name>
-  <version>0.0.1</version>
+  <version>1.0.0</version>
   <description>Elite CS series robot ros2 driver</description>
   <maintainer email="yanxiaojia@elibot.cn">Ivan</maintainer>
   <license>Apache-2.0</license>
@@ -37,8 +37,6 @@
   <depend>launch</depend>
   <depend>launch_ros</depend>
   
-  <exec_depend>urdf</exec_depend>
-  <exec_depend>xacro</exec_depend>
   <exec_depend>force_torque_sensor_broadcaster</exec_depend>
   <exec_depend>joint_trajectory_controller</exec_depend>
   <exec_depend>joint_state_broadcaster</exec_depend>
