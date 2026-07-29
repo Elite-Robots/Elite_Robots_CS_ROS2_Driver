@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>elite_robots_calibration</name>
-  <version>0.0.0</version>
+  <version>1.0.0</version>
   <description>
     Package for extracting the factory calibration from a CS robot and change it such that it can be used by elite_robots_description to gain a correct URDF
   </description>
