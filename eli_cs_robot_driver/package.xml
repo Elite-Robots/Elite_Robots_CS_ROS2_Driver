@@ -17,6 +17,7 @@
   <depend>rclpy</depend>
   <depend>std_msgs</depend>
   <depend>tf2_geometry_msgs</depend>
+  <depend>tf2_ros</depend>
   <depend>ros2_controllers</depend>
   <depend>ros2_control</depend>
   <depend>rclcpp</depend>
@@ -30,6 +31,8 @@
   <depend>sensor_msgs</depend>
   <depend>control_msgs</depend>
   <depend>trajectory_msgs</depend>
+  <depend>moveit_ros_planning_interface</depend>
+  <depend>moveit_msgs</depend>
   <depend>hardware_interface</depend>
   <depend>pluginlib</depend>
   <depend>controller_manager_msgs</depend>

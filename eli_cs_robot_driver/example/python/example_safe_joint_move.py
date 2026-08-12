@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # Send a single joint target with a computed duration that respects a max joint velocity.
 # Intended for real robot via scaled_joint_trajectory_controller to avoid "External Control speed limit".
+#
+# Usage example:
+#   ros2 run eli_cs_robot_driver example_safe_joint_move_py --ros-args
+#     -p target:="[0.0,-1.2,0.0,-1.57,0.0,0.0]" -p max_vel:=0.5 -p min_time:=2.0
+#     -p controller:="scaled_joint_trajectory_controller"
 
 import argparse
 import math

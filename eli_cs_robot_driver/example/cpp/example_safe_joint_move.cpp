@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Send a single joint target with a duration computed from a max joint velocity.
 // Usage example:
-//   ros2 run eli_cs_robot_driver safe_joint_move_cpp --ros-args
+//   ros2 run eli_cs_robot_driver example_safe_joint_move --ros-args
 //     -p target:="[0.0,-1.2,0.0,-1.57,0.0,0.0]" -p max_vel:=0.5 -p min_time:=2.0
 //     -p controller:="scaled_joint_trajectory_controller"
 
