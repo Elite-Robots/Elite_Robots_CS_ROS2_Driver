@@ -86,34 +86,34 @@ Close the pop-up dialogue of the safe mode.
 #### *quit*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
 Quit and disconnect.
 
-#### *popup*[eli_dashboard_interface/srv/Popup](/eli_dashboard_interface/srv/Popup.srv)
+#### *popup*[elite_robots_dashboard_msgs/srv/Popup](/elite_robots_dashboard_msgs/srv/Popup.srv)
 Pop up a message box with the specified texts or close a message box of the latest popup commands.
 
-#### *log*[(eli_dashboard_interface/srv/Log)](/eli_dashboard_interface/srv/Log.srv)
+#### *log*[(elite_robots_dashboard_msgs/srv/Log)](/elite_robots_dashboard_msgs/srv/Log.srv)
 Add the log information.
 
-#### *get_task_status*[(eli_common_interface/srv/GetTaskStatus)](/eli_common_interface/srv/GetTaskStatus.srv)
+#### *get_task_status*[(elite_robots_msgs/srv/GetTaskStatus)](/elite_robots_msgs/srv/GetTaskStatus.srv)
 Get current task state.
 
-#### *is_task_saved*[(eli_dashboard_interface/srv/IsSaved)](/eli_dashboard_interface/srv/IsSaved.srv)
+#### *is_task_saved*[(elite_robots_dashboard_msgs/srv/IsSaved)](/elite_robots_dashboard_msgs/srv/IsSaved.srv)
 Is current task saved.
 
-#### *is_configuration_saved*[(eli_dashboard_interface/srv/IsSaved)](/eli_dashboard_interface/srv/IsSaved.srv)
+#### *is_configuration_saved*[(elite_robots_dashboard_msgs/srv/IsSaved)](/elite_robots_dashboard_msgs/srv/IsSaved.srv)
 Is current configuration saved.
 
-#### *robot_mode*[(eli_common_interface/srv/GetRobotMode)](/eli_common_interface/srv/GetRobotMode.srv)
+#### *robot_mode*[(elite_robots_msgs/srv/GetRobotMode)](/elite_robots_msgs/srv/GetRobotMode.srv)
 The robot current mode.
 
-#### *get_safety_mode*[(eli_common_interface/srv/GetSafetyMode)](/eli_common_interface/srv/GetSafetyMode.srv)
+#### *get_safety_mode*[(elite_robots_msgs/srv/GetSafetyMode)](/elite_robots_msgs/srv/GetSafetyMode.srv)
 The robot current safety mode.
 
 #### *get_task_path*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
 Got the relative path of the currently loaded task file (It will be deemed no file loading if any untitled task is not saved locally. Unsaved files do not have a clear path.)
 
-#### *load_configure*[(eli_dashboard_interface/srv/Load)](/eli_dashboard_interface/srv/Load.srv)
+#### *load_configure*[(elite_robots_dashboard_msgs/srv/Load)](/elite_robots_dashboard_msgs/srv/Load.srv)
 Loaded the configuration file in accordance with the path.
 
-#### *load_task*[(eli_dashboard_interface/srv/Load)](/eli_dashboard_interface/srv/Load.srv)
+#### *load_task*[(elite_robots_dashboard_msgs/srv/Load)](/elite_robots_dashboard_msgs/srv/Load.srv)
 Loaded the task file in accordance with the path.
 
 #### *connect*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
@@ -122,7 +122,7 @@ Connect to robot.
 #### *restart_safety*[(std_srvs/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
 Restart robot safety system.
 
-#### *custom_request*[(eli_dashboard_interface/srv/CustomRequest)](/eli_dashboard_interface/srv/CustomRequest.srv)
+#### *custom_request*[(elite_robots_dashboard_msgs/srv/CustomRequest)](/elite_robots_dashboard_msgs/srv/CustomRequest.srv)
 Send custom request and receive robot response
 
 ## primary_client
@@ -158,16 +158,16 @@ The controller provide ditital IO publisher, tool data publisher and the like. A
 
 ### Publisher
 
-#### *io_states*[(eli_common_interface/msg/IOState)](/eli_common_interface/msg/IOState.msg)
+#### *io_states*[(elite_robots_msgs/msg/IOState)](/elite_robots_msgs/msg/IOState.msg)
 The standard ,configure and tool digital IO state.
 
-#### *tool_data*[(eli_common_interface/msg/ToolData)](/eli_common_interface/msg/ToolData.msg)
+#### *tool_data*[(elite_robots_msgs/msg/ToolData)](/elite_robots_msgs/msg/ToolData.msg)
 The tool data containing mode, output voltage and so on.
 
-#### *robot_mode*[(eli_common_interface/msg/RobotMode)](/eli_common_interface/msg/RobotMode.msg)
+#### *robot_mode*[(elite_robots_msgs/msg/RobotMode)](/elite_robots_msgs/msg/RobotMode.msg)
 The robot mode.
 
-#### *safety_mode*[(eli_common_interface/msg/SafetyMode)](/eli_common_interface/msg/SafetyMode.msg)
+#### *safety_mode*[(elite_robots_msgs/msg/SafetyMode)](/elite_robots_msgs/msg/SafetyMode.msg)
 The robot safety mode.
 
 #### *robot_task_running*[(std_msgs/msg/Bool)](https://docs.ros.org/en/api/std_msgs/html/msg/Bool.html)
@@ -175,10 +175,10 @@ If running task and robot connected, the value is true. Else is false.
 
 ### Services
 
-#### *set_io*[(eli_common_interface/srv/SetIO)](/eli_common_interface/srv/SetIO.srv)
+#### *set_io*[(elite_robots_msgs/srv/SetIO)](/elite_robots_msgs/srv/SetIO.srv)
 Set the standard, configure, tool digital IO.
 
-#### *set_speed_slider*[(eli_common_interface/srv/SetSpeedSliderFraction)](/eli_common_interface/srv/SetSpeedSliderFraction.srv)
+#### *set_speed_slider*[(elite_robots_msgs/srv/SetSpeedSliderFraction)](/elite_robots_msgs/srv/SetSpeedSliderFraction.srv)
 Set the robot speed slider.
 
 #### *resend_external_script*[(std_srvs/srv/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
@@ -187,7 +187,7 @@ If in headless mode, resend the external script to robot.
 #### *hand_back_control*[(std_srvs/srv/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
 Exit external control script hand back control.
 
-#### *set_payload*[(eli_common_interface/srv/SetPayload)](/eli_common_interface/srv/SetPayload.srv)
+#### *set_payload*[(elite_robots_msgs/srv/SetPayload)](/elite_robots_msgs/srv/SetPayload.srv)
 Set robot payload.
 
 #### *zero_ftsensor*[(std_srvs/srv/Trigger)](https://docs.ros.org/en/api/std_srvs/html/srv/Trigger.html)
