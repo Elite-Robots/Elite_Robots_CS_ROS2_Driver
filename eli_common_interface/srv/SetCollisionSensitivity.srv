@@ -1,0 +1,4 @@
+# Collision sensitivity ratio in percent. Valid range: [10, 100].
+int32 ratio
+---
+bool success

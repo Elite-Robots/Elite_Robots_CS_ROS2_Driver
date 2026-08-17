@@ -149,6 +149,13 @@ class EliteCSPositionHardwareInterface : public hardware_interface::SystemInterf
     double resend_external_script_async_success_;
     double hand_back_control_cmd_;
     double hand_back_control_async_success_;
+    double collision_detect_enabled_cmd_;
+    double collision_detect_enabled_async_success_;
+    double collision_sensitivity_cmd_;
+    double collision_sensitivity_async_success_;
+    double mounting_z_rotation_cmd_;
+    double mounting_tilt_cmd_;
+    double mounting_plane_async_success_;
 
     // payload stuff
     ELITE::vector3d_t payload_center_of_gravity_;

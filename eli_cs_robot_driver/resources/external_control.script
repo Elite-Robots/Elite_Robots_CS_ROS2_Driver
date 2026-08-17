@@ -10,13 +10,16 @@ TRAJECTORY_RESULT_SUCCESS = 0
 TRAJECTORY_RESULT_CANCELED = 1
 TRAJECTORY_RESULT_FAILURE = 2
 
+TRAJECTORY_FEEDBACK_MESSAGE_ACTIVE_POINT = 1
+TRAJECTORY_FEEDBACK_MESSAGE_POINT_DONE = 2
+TRAJECTORY_FEEDBACK_MESSAGE_RESULT = 3
+
 TRAJECTORY_ACTION_CANCEL = -1
 TRAJECTORY_ACTION_NOOP = 0
 TRAJECTORY_ACTION_START = 1
 
 TRAJECTORY_MOTION_JOINT = 0
 TRAJECTORY_MOTION_CARTESIAN = 1
-
 POS_ZOOM_RATIO = {{POS_ZOOM_RATIO_REPLACE}}
 TIME_ZOOM_RATIO = {{TIME_ZOOM_RATIO_REPLACE}}
 COMMON_ZOOM_RATIO = {{COMMON_ZOOM_RATIO_REPLACE}}
@@ -43,6 +46,9 @@ SCRIPT_CMD_START_TOOL_COMMUNICATION = 5
 SCRIPT_CMD_END_TOOL_COMMUNICATION = 6
 SCRIPT_CMD_START_BOARD_RS485 = 7
 SCRIPT_CMD_END_BOARD_RS485 = 8
+SCRIPT_CMD_SET_COLLISION_DETECT_ENABLED = 9
+SCRIPT_CMD_SET_COLLISION_SENSITIVITY = 10
+SCRIPT_CMD_SET_MOUNTING_PLANE = 11
 
 SCRIPT_CMD_RESULT_SOCAT_RUN = 1
 SCRIPT_CMD_RESULT_SOCAT_CANCEL = 2
@@ -70,6 +76,16 @@ SERVO_MUTEX = threading.Lock()
 # The value of the `t` parameter in the servoj command.
 SERVOJ_TIME = {{SERVOJ_TIME_REPLACE}}
 
+# Maximum duration for constant-velocity extrapolation when no new servoj point arrives.
+SERVOJ_EXTRAPOLATE_MAX_TIME = max(0.0, {{SERVOJ_EXTRAPOLATE_MAX_TIME_REPLACE}})
+
+# After the constant-velocity window, linearly ramp the extrapolation speed down to zero.
+SERVOJ_DECELERATE_TIME = max(0.0, {{SERVOJ_DECELERATE_TIME_REPLACE}})
+
+# Lock to a fixed hold point only after the actual joints stay almost still for a short time.
+SERVOJ_HOLD_VELOCITY_THRESHOLD = max(0.0, {{SERVOJ_HOLD_VELOCITY_THRESHOLD_REPLACE}})
+SERVOJ_HOLD_STABLE_TIME = max(0.0, {{SERVOJ_HOLD_STABLE_TIME_REPLACE}})
+
 #Global variables are also showed in the Teach pendants variable list
 global control_mode
 global script_command
@@ -82,6 +98,44 @@ global violation_popup_counter
 global cmd_servo_state
 global extrapolate_count
 global extrapolate_max_count
+global servo_hold_joints
+global servo_hold_reference_joints
+global servo_hold_stable_count
+global servo_hold_locked
+global cmd_trajectory_blend_radius
+global cmd_trajectory_point
+global trajectory_total_points
+global trajectory_active_point_index
+trajectory_total_points = 0
+trajectory_active_point_index = -1
+
+def sendTrajectoryFeedback(message_type, point_index, total_points, result, point):
+    socket_send_int(message_type, "trajectory_socket")
+    socket_send_int(point_index, "trajectory_socket")
+    socket_send_int(total_points, "trajectory_socket")
+    socket_send_int(result, "trajectory_socket")
+    socket_send_int(round(point[0] * POS_ZOOM_RATIO), "trajectory_socket")
+    socket_send_int(round(point[1] * POS_ZOOM_RATIO), "trajectory_socket")
+    socket_send_int(round(point[2] * POS_ZOOM_RATIO), "trajectory_socket")
+    socket_send_int(round(point[3] * POS_ZOOM_RATIO), "trajectory_socket")
+    socket_send_int(round(point[4] * POS_ZOOM_RATIO), "trajectory_socket")
+    socket_send_int(round(point[5] * POS_ZOOM_RATIO), "trajectory_socket")
+
+def jointsWithinDelta(left, right, max_delta):
+    for i in range(6):
+        if norm(left[i] - right[i]) > max_delta:
+            return False
+    return True
+
+def resetServoHoldState(reference_joints):
+    global servo_hold_joints
+    global servo_hold_reference_joints
+    global servo_hold_stable_count
+    global servo_hold_locked
+    servo_hold_joints = reference_joints
+    servo_hold_reference_joints = reference_joints
+    servo_hold_stable_count = 0
+    servo_hold_locked = False
 
 """
 @brief Function to verify whether the specified target can be reached within the defined time frame while staying within the robot's speed limits
@@ -117,34 +171,58 @@ def targetWithinLimits(step_start, step_end, time):
 
 def trajectoryThread():
     global trajectory_point_num
+    global cmd_trajectory_blend_radius
+    global cmd_trajectory_point
+    global trajectory_total_points
+    global trajectory_active_point_index
     blend_radius = int()
     while trajectory_point_num > 0:
         raw_point = socket_read_binary_integer(TRAJECTORY_DATA_SIZE, "trajectory_socket", 0.5)
+        current_point_index = trajectory_total_points - trajectory_point_num
         trajectory_point_num -= 1
 
         if trajectory_point_num <= 0:
             blend_radius = 0
         else:
             blend_radius = raw_point[20] / POS_ZOOM_RATIO
+        cmd_trajectory_blend_radius = blend_radius
         
         if raw_point[0] > 0:
             point = [raw_point[1] / POS_ZOOM_RATIO, raw_point[2] / POS_ZOOM_RATIO, raw_point[3] / POS_ZOOM_RATIO, raw_point[4] / POS_ZOOM_RATIO, raw_point[5] / POS_ZOOM_RATIO, raw_point[6] / POS_ZOOM_RATIO]
+            cmd_trajectory_point = point
+            trajectory_active_point_index = current_point_index
+            sendTrajectoryFeedback(TRAJECTORY_FEEDBACK_MESSAGE_ACTIVE_POINT, current_point_index, trajectory_total_points, -1, point)
+
+            speed = raw_point[7] / COMMON_ZOOM_RATIO
+            acceleration = raw_point[8] / COMMON_ZOOM_RATIO
             time = raw_point[19] / TIME_ZOOM_RATIO
             
             motion_type = raw_point[21]
             
             if motion_type == TRAJECTORY_MOTION_JOINT:
-                movej(point, t = time, r = blend_radius)
+                if time > 0:
+                    movej(point, t = time, r = blend_radius)
+                elif speed > 0 and acceleration > 0:
+                    movej(point, a = acceleration, v = speed, r = blend_radius)
+                else:
+                    movej(point, r = blend_radius)
             elif motion_type == TRAJECTORY_MOTION_CARTESIAN:
-                movel(point, t = time, r = blend_radius)
+                if time > 0:
+                    movel(point, t = time, r = blend_radius)
+                elif speed > 0 and acceleration > 0:
+                    movel(point, a = acceleration, v = speed, r = blend_radius)
+                else:
+                    movel(point, r = blend_radius)
+            sendTrajectoryFeedback(TRAJECTORY_FEEDBACK_MESSAGE_POINT_DONE, current_point_index, trajectory_total_points, -1, point)
     
-    socket_send_int(TRAJECTORY_RESULT_SUCCESS, "trajectory_socket")
+    sendTrajectoryFeedback(TRAJECTORY_FEEDBACK_MESSAGE_RESULT, trajectory_total_points, trajectory_total_points, TRAJECTORY_RESULT_SUCCESS, cmd_trajectory_point)
 
 def setServoSetpoint(joints):
     global cmd_servo_joints, cmd_servo_state
     cmd_servo_state = SERVO_RUNNING
     if targetWithinLimits(cmd_servo_joints, joints, SERVOJ_TIME):
         cmd_servo_joints = joints
+        resetServoHoldState(joints)
     # If the target has been interpolating too far away from the robot, so it would trigger the limit
     # check, but the target is close to where the robot currently is, also accept the command.
     # This can, for example, happen if a command series was too fast for the robot to follow, which
@@ -152,12 +230,51 @@ def setServoSetpoint(joints):
     # command.
     elif targetWithinLimits(get_actual_joint_positions(), joints, SERVOJ_TIME):
         cmd_servo_joints = joints
+        resetServoHoldState(joints)
 
-def extrapolate():
+def getServoExtrapolateScale(extrapolate_duration):
+    if extrapolate_duration <= SERVOJ_EXTRAPOLATE_MAX_TIME:
+        return 1.0
+
+    decelerate_duration = extrapolate_duration - SERVOJ_EXTRAPOLATE_MAX_TIME
+    if SERVOJ_DECELERATE_TIME <= 0.0:
+        return 0.0
+    if decelerate_duration >= SERVOJ_DECELERATE_TIME:
+        return 0.0
+
+    return max(0.0, 1.0 - decelerate_duration / SERVOJ_DECELERATE_TIME)
+
+def extrapolate(extrapolate_duration):
     global cmd_servo_joints
+    global servo_hold_joints
+    global servo_hold_reference_joints
+    global servo_hold_stable_count
+    global servo_hold_locked
+    if extrapolate_duration >= SERVOJ_EXTRAPOLATE_MAX_TIME + SERVOJ_DECELERATE_TIME:
+        actual_joints = get_actual_joint_positions()
+
+        if servo_hold_locked:
+            cmd_servo_joints = servo_hold_joints
+            return cmd_servo_joints
+
+        cmd_servo_joints = actual_joints
+
+        if jointsWithinDelta(actual_joints, servo_hold_reference_joints, SERVOJ_HOLD_VELOCITY_THRESHOLD * SERVOJ_TIME):
+            servo_hold_stable_count += 1
+        else:
+            servo_hold_stable_count = 0
+
+        servo_hold_reference_joints = actual_joints
+        if SERVOJ_HOLD_STABLE_TIME > 0 and servo_hold_stable_count > 0 and servo_hold_stable_count * SERVOJ_TIME >= SERVOJ_HOLD_STABLE_TIME:
+            servo_hold_joints = actual_joints
+            cmd_servo_joints = servo_hold_joints
+            servo_hold_locked = True
+        return cmd_servo_joints
+
     joint_speed = get_target_joint_speeds()
+    extrapolate_scale = getServoExtrapolateScale(extrapolate_duration)
     for i in range(len(joint_speed)):
-        cmd_servo_joints[i] = cmd_servo_joints[i] + (joint_speed[i] * SERVOJ_TIME)
+        cmd_servo_joints[i] = cmd_servo_joints[i] + (joint_speed[i] * SERVOJ_TIME * extrapolate_scale)
     return cmd_servo_joints
 
 def getServoPoints():
@@ -177,8 +294,8 @@ def getServoPoints():
         if do_extrapolate:
             extrapolate_count += 1
             extrapolate_max_count = max(extrapolate_count, extrapolate_max_count)
-
-            joints = extrapolate()
+            extrapolate_duration = extrapolate_count * SERVOJ_TIME
+            joints = extrapolate(extrapolate_duration)
             return joints
         elif state == SERVO_RUNNING:
             extrapolate_count = 0
@@ -280,6 +397,18 @@ def scriptCommands():
                 force_mode(task_frame, selection_vector, wrench, force_type, force_limits)
             elif script_command == SCRIPT_CMD_END_FORCE_MODE:
                 end_force_mode()
+            elif script_command == SCRIPT_CMD_SET_COLLISION_DETECT_ENABLED:
+                set_collision_detect_enabled(raw_command[2] != 0)
+                textmsg("set_collision_detect_enabled executed: enable=" + str(raw_command[2] != 0))
+            elif script_command == SCRIPT_CMD_SET_COLLISION_SENSITIVITY:
+                set_dyn_collision_force_min_ratio(raw_command[2])
+                textmsg("set_dyn_collision_force_min_ratio executed: ratio=" + str(raw_command[2]))
+            elif script_command == SCRIPT_CMD_SET_MOUNTING_PLANE:
+                z_rotation = raw_command[2] / COMMON_ZOOM_RATIO
+                tilt = raw_command[3] / COMMON_ZOOM_RATIO
+                gravity = [9.82 * sin(tilt) * sin(z_rotation), -9.82 * sin(tilt) * cos(z_rotation), 9.82 * cos(tilt)]
+                set_gravity(gravity)
+                textmsg("set_gravity executed: z_rotation=" + str(z_rotation) + ", tilt=" + str(tilt) + ", gravity=" + str(gravity))
 
 # HEADER_END
 
@@ -295,6 +424,8 @@ cmd_speed_joint = [0, 0, 0, 0, 0, 0]
 control_mode = MODE_UNINITIALIZED
 steptime = get_steptime()
 trajectory_point_num = 0
+trajectory_active_point_index = -1
+cmd_trajectory_point = [0, 0, 0, 0, 0, 0]
 cmd_servo_joints = get_actual_joint_positions()
 script_command_thread_handle = start_thread(scriptCommands, ())
 move_thread_handle = 0
@@ -304,6 +435,7 @@ violation_popup_counter = 0
 cmd_servo_state = SERVO_UNINITIALIZED
 extrapolate_count = 0
 extrapolate_max_count = 0
+resetServoHoldState(cmd_servo_joints)
 
 while control_mode > MODE_STOPPED:
     params_mult = socket_read_binary_integer(REVERSE_DATA_SIZE, "reverse_socket", read_timeout)
@@ -320,8 +452,8 @@ while control_mode > MODE_STOPPED:
                 trajectory_thread_handle = 0
                 if trajectory_point_num > 0:
                     stopj(STOPJ_ACCELERATION)
+                    sendTrajectoryFeedback(TRAJECTORY_FEEDBACK_MESSAGE_RESULT, trajectory_active_point_index, trajectory_total_points, TRAJECTORY_RESULT_CANCELED, cmd_trajectory_point)
                     trajectoryClearPoints()
-                    socket_send_int(TRAJECTORY_RESULT_CANCELED, "trajectory_socket")
             elif control_mode == MODE_FREEDRIVE:
                 textmsg("End freedrive mode")
                 end_freedrive_mode()
@@ -345,9 +477,11 @@ while control_mode > MODE_STOPPED:
                 move_thread_handle = start_thread(speedjThread, ())
             elif control_mode == MODE_SERVOJ:
                 cmd_servo_joints = get_actual_joint_positions()
+                resetServoHoldState(cmd_servo_joints)
                 move_thread_handle = start_thread(servoThread, (MODE_SERVOJ,))
             elif control_mode == MODE_POSE:
                 cmd_servo_joints = get_actual_joint_positions()
+                resetServoHoldState(cmd_servo_joints)
                 move_thread_handle = start_thread(servoThread, (MODE_POSE,))
             
         # Update the motion commands with new parameters
@@ -370,15 +504,17 @@ while control_mode > MODE_STOPPED:
                 trajectory_thread_handle = 0
                 trajectoryClearPoints()
                 trajectory_point_num = params_mult[3]
+                trajectory_total_points = trajectory_point_num
+                trajectory_active_point_index = -1
                 trajectory_thread_handle = start_thread(trajectoryThread, ())
             elif params_mult[2] == TRAJECTORY_ACTION_CANCEL:
                 textmsg("Trajectory cancel received")
                 stop_thread(trajectory_thread_handle)
                 join_thread(trajectory_thread_handle)
                 trajectory_thread_handle = 0
+                sendTrajectoryFeedback(TRAJECTORY_FEEDBACK_MESSAGE_RESULT, trajectory_active_point_index, trajectory_total_points, TRAJECTORY_RESULT_CANCELED, cmd_trajectory_point)
                 trajectoryClearPoints()
                 stopj(STOPJ_ACCELERATION)
-                socket_send_int(TRAJECTORY_RESULT_CANCELED, "trajectory_socket")
         elif control_mode == MODE_FREEDRIVE:
             if params_mult[2] == FREEDRIVE_START:
                 textmsg("Start freedrive mode")

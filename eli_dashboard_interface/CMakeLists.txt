@@ -28,6 +28,9 @@ rosidl_generate_interfaces(
   "srv/Log.srv"
   "srv/IsSaved.srv"
   "srv/CustomRequest.srv"
+  "srv/SetRemoteControl.srv"
+  "srv/GetRemoteControl.srv"
+  "srv/GetRemoteControlMode.srv"
 )
 
 ament_package()

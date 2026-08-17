@@ -19,6 +19,21 @@ int8_t toRosTaskStatus(const ELITE::TaskStatus sdk_status) {
             return eli_common_interface::msg::TaskStatus::UNKNOWN;
     }
 }
+
+int8_t toRosRemoteControlMode(const ELITE::RemoteControlMode sdk_mode) {
+    using Response = eli_dashboard_interface::srv::GetRemoteControlMode::Response;
+    switch (sdk_mode) {
+        case ELITE::RemoteControlMode::REMOTE:
+            return Response::REMOTE;
+        case ELITE::RemoteControlMode::LOCAL:
+            return Response::LOCAL;
+        case ELITE::RemoteControlMode::NONE:
+            return Response::NONE;
+        case ELITE::RemoteControlMode::UNKNOWN:
+        default:
+            return Response::UNKNOWN;
+    }
+}
 }  // namespace
 
 DashboardClient::DashboardClient(const rclcpp::NodeOptions& options) : Node("dashboard_client", options) {
@@ -53,6 +68,48 @@ DashboardClient::DashboardClient(const rclcpp::NodeOptions& options) : Node("das
     quit_service_ = createTriggerService("~/quit", [&]()->bool{ client_.quit(); return true; });
 
     safety_system_restart_service_ = createTriggerService("~/restart_safety", [&]()->bool{ return client_.safetySystemRestart(); });
+
+    set_remote_control_service_ = this->create_service<eli_dashboard_interface::srv::SetRemoteControl>(
+        "~/set_remote_control",
+        [&](const eli_dashboard_interface::srv::SetRemoteControl::Request::SharedPtr req,
+            eli_dashboard_interface::srv::SetRemoteControl::Response::SharedPtr resp) {
+            try {
+                resp->success = client_.remoteControl(req->enable);
+            } catch (const ELITE::EliteException& e) {
+                resp->success = false;
+                resp->message = e.what();
+            }
+        });
+
+    get_remote_control_service_ = this->create_service<eli_dashboard_interface::srv::GetRemoteControl>(
+        "~/get_remote_control",
+        [&](const eli_dashboard_interface::srv::GetRemoteControl::Request::SharedPtr req,
+            eli_dashboard_interface::srv::GetRemoteControl::Response::SharedPtr resp) {
+            (void)req;
+            try {
+                resp->enabled = client_.remoteControl();
+                resp->success = true;
+            } catch (const ELITE::EliteException& e) {
+                resp->enabled = false;
+                resp->success = false;
+                resp->message = e.what();
+            }
+        });
+
+    get_remote_control_mode_service_ = this->create_service<eli_dashboard_interface::srv::GetRemoteControlMode>(
+        "~/get_remote_control_mode",
+        [&](const eli_dashboard_interface::srv::GetRemoteControlMode::Request::SharedPtr req,
+            eli_dashboard_interface::srv::GetRemoteControlMode::Response::SharedPtr resp) {
+            (void)req;
+            try {
+                resp->mode = toRosRemoteControlMode(client_.remoteControlMode());
+                resp->success = true;
+            } catch (const ELITE::EliteException& e) {
+                resp->mode = eli_dashboard_interface::srv::GetRemoteControlMode::Response::UNKNOWN;
+                resp->success = false;
+                resp->message = e.what();
+            }
+        });
 
     popup_service_ = this->create_service<eli_dashboard_interface::srv::Popup>(
         "~/popup",

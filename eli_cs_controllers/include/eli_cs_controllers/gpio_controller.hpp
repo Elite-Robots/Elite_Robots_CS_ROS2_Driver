@@ -8,6 +8,9 @@
 #include "eli_common_interface/srv/set_io.hpp"
 #include "eli_common_interface/srv/set_speed_slider_fraction.hpp"
 #include "eli_common_interface/srv/set_payload.hpp"
+#include "eli_common_interface/srv/set_collision_detect_enabled.hpp"
+#include "eli_common_interface/srv/set_collision_sensitivity.hpp"
+#include "eli_common_interface/srv/set_mounting_plane.hpp"
 
 #include <memory>
 #include <string>
@@ -102,7 +105,14 @@ private:
         ZERO_FTSENSOR,
         ZERO_FTSENSOR_SUCCESS,
         HAND_BACK_CONTROL,
-        HAND_BACK_CONTROL_SUCCESS
+        HAND_BACK_CONTROL_SUCCESS,
+        COLLISION_DETECT_ENABLED,
+        COLLISION_DETECT_ENABLED_SUCCESS,
+        COLLISION_SENSITIVITY,
+        COLLISION_SENSITIVITY_SUCCESS,
+        MOUNTING_Z_ROTATION,
+        MOUNTING_TILT,
+        MOUNTING_PLANE_SUCCESS
     };
 
     bool setIO(eli_common_interface::srv::SetIO::Request::SharedPtr req, eli_common_interface::srv::SetIO::Response::SharedPtr resp);
@@ -117,6 +127,15 @@ private:
     bool setPayload(const eli_common_interface::srv::SetPayload::Request::SharedPtr req, eli_common_interface::srv::SetPayload::Response::SharedPtr resp);
 
     bool zeroFTSensor(std_srvs::srv::Trigger::Request::SharedPtr req, std_srvs::srv::Trigger::Response::SharedPtr resp);
+
+    bool setCollisionDetectEnabled(const eli_common_interface::srv::SetCollisionDetectEnabled::Request::SharedPtr req,
+                                   eli_common_interface::srv::SetCollisionDetectEnabled::Response::SharedPtr resp);
+
+    bool setCollisionSensitivity(const eli_common_interface::srv::SetCollisionSensitivity::Request::SharedPtr req,
+                                 eli_common_interface::srv::SetCollisionSensitivity::Response::SharedPtr resp);
+
+    bool setMountingPlane(const eli_common_interface::srv::SetMountingPlane::Request::SharedPtr req,
+                          eli_common_interface::srv::SetMountingPlane::Response::SharedPtr resp);
 
     void publishIO();
 
@@ -140,6 +159,9 @@ private:
     rclcpp::Service<eli_common_interface::srv::SetIO>::SharedPtr set_io_srv_;
     rclcpp::Service<eli_common_interface::srv::SetPayload>::SharedPtr set_payload_srv_;
     rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr tare_sensor_srv_;
+    rclcpp::Service<eli_common_interface::srv::SetCollisionDetectEnabled>::SharedPtr set_collision_detect_enabled_srv_;
+    rclcpp::Service<eli_common_interface::srv::SetCollisionSensitivity>::SharedPtr set_collision_sensitivity_srv_;
+    rclcpp::Service<eli_common_interface::srv::SetMountingPlane>::SharedPtr set_mounting_plane_srv_;
 
     std::shared_ptr<rclcpp::Publisher<eli_common_interface::msg::IOState>> io_pub_;
     std::shared_ptr<rclcpp::Publisher<eli_common_interface::msg::ToolData>> tool_data_pub_;

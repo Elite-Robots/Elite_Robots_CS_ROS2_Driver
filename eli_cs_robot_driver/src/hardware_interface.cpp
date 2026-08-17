@@ -45,7 +45,14 @@ hardware_interface::CallbackReturn EliteCSPositionHardwareInterface::on_init(con
     runtime_state_ = ELITE::TaskStatus::STOPPED;
     controllers_initialized_ = false;
     system_interface_initialized_ = 0.0;
+    target_speed_fraction_cmd_ = NO_NEW_CMD;
     resend_external_script_cmd_ = NO_NEW_CMD;
+    zero_ftsensor_cmd_ = NO_NEW_CMD;
+    hand_back_control_cmd_ = NO_NEW_CMD;
+    collision_detect_enabled_cmd_ = NO_NEW_CMD;
+    collision_sensitivity_cmd_ = NO_NEW_CMD;
+    mounting_z_rotation_cmd_ = NO_NEW_CMD;
+    mounting_tilt_cmd_ = NO_NEW_CMD;
     is_robot_connected_ = false;
     is_last_power_on_ = false;
 
@@ -272,6 +279,22 @@ std::vector<hardware_interface::CommandInterface> EliteCSPositionHardwareInterfa
 
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         tf_prefix + "hand_back_control", "hand_back_control_async_success", &hand_back_control_async_success_));
+
+    command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(tf_prefix + "collision_detect", "enabled_cmd", &collision_detect_enabled_cmd_));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        tf_prefix + "collision_detect", "enabled_async_success", &collision_detect_enabled_async_success_));
+
+    command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(tf_prefix + "collision_sensitivity", "ratio_cmd", &collision_sensitivity_cmd_));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        tf_prefix + "collision_sensitivity", "ratio_async_success", &collision_sensitivity_async_success_));
+
+    command_interfaces.emplace_back(
+        hardware_interface::CommandInterface(tf_prefix + "mounting_plane", "z_rotation", &mounting_z_rotation_cmd_));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "mounting_plane", "tilt", &mounting_tilt_cmd_));
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        tf_prefix + "mounting_plane", "mounting_plane_async_success", &mounting_plane_async_success_));
 
     command_interfaces.emplace_back(hardware_interface::CommandInterface(tf_prefix + "payload", "mass", &payload_mass_));
     command_interfaces.emplace_back(
@@ -540,6 +563,10 @@ hardware_interface::return_type EliteCSPositionHardwareInterface::read(const rcl
         resend_external_script_cmd_ = NO_NEW_CMD;
         zero_ftsensor_cmd_ = NO_NEW_CMD;
         hand_back_control_cmd_ = NO_NEW_CMD;
+        collision_detect_enabled_cmd_ = NO_NEW_CMD;
+        collision_sensitivity_cmd_ = NO_NEW_CMD;
+        mounting_z_rotation_cmd_ = NO_NEW_CMD;
+        mounting_tilt_cmd_ = NO_NEW_CMD;
         freedrive_start_cmd_ = NO_NEW_CMD;
         freedrive_end_cmd_ = NO_NEW_CMD;
         is_last_power_on_ = true;
@@ -744,6 +771,38 @@ void EliteCSPositionHardwareInterface::updateAsyncIO() {
         eli_driver_->stopControl();
         hand_back_control_async_success_ = true;
         hand_back_control_cmd_ = NO_NEW_CMD;
+    }
+
+    if (!std::isnan(collision_detect_enabled_cmd_) && eli_driver_ != nullptr) {
+        try {
+            collision_detect_enabled_async_success_ = eli_driver_->setCollisionDetectEnabled(collision_detect_enabled_cmd_ != 0.0);
+        } catch (const ELITE::EliteException& e) {
+            collision_detect_enabled_async_success_ = false;
+            RCLCPP_ERROR(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "Set collision detection failed: '%s'", e.what());
+        }
+        collision_detect_enabled_cmd_ = NO_NEW_CMD;
+    }
+
+    if (!std::isnan(collision_sensitivity_cmd_) && eli_driver_ != nullptr) {
+        try {
+            collision_sensitivity_async_success_ =
+                eli_driver_->setCollisionSensitivity(static_cast<int32_t>(collision_sensitivity_cmd_));
+        } catch (const ELITE::EliteException& e) {
+            collision_sensitivity_async_success_ = false;
+            RCLCPP_ERROR(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "Set collision sensitivity failed: '%s'", e.what());
+        }
+        collision_sensitivity_cmd_ = NO_NEW_CMD;
+    }
+
+    if (!std::isnan(mounting_z_rotation_cmd_) && !std::isnan(mounting_tilt_cmd_) && eli_driver_ != nullptr) {
+        try {
+            mounting_plane_async_success_ = eli_driver_->setMountingPlane(mounting_z_rotation_cmd_, mounting_tilt_cmd_);
+        } catch (const ELITE::EliteException& e) {
+            mounting_plane_async_success_ = false;
+            RCLCPP_ERROR(rclcpp::get_logger("EliteCSPositionHardwareInterface"), "Set mounting plane failed: '%s'", e.what());
+        }
+        mounting_z_rotation_cmd_ = NO_NEW_CMD;
+        mounting_tilt_cmd_ = NO_NEW_CMD;
     }
 
     if (!std::isnan(payload_mass_) && !std::isnan(payload_center_of_gravity_[0]) && !std::isnan(payload_center_of_gravity_[1]) &&

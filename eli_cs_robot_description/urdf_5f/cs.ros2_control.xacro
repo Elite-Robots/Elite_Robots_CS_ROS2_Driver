@@ -351,6 +351,22 @@
           <command_interface name="hand_back_control_async_success"/>
         </gpio>
 
+        <gpio name="${tf_prefix}collision_detect">
+          <command_interface name="enabled_cmd"/>
+          <command_interface name="enabled_async_success"/>
+        </gpio>
+
+        <gpio name="${tf_prefix}collision_sensitivity">
+          <command_interface name="ratio_cmd"/>
+          <command_interface name="ratio_async_success"/>
+        </gpio>
+
+        <gpio name="${tf_prefix}mounting_plane">
+          <command_interface name="z_rotation"/>
+          <command_interface name="tilt"/>
+          <command_interface name="mounting_plane_async_success"/>
+        </gpio>
+
         <gpio name="${tf_prefix}zero_ftsensor">
           <command_interface name="zero_ftsensor_cmd"/>
           <command_interface name="zero_ftsensor_async_success"/>

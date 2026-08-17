@@ -15,6 +15,9 @@
 #include "eli_common_interface/srv/get_robot_mode.hpp"
 #include "eli_common_interface/srv/get_safety_mode.hpp"
 #include "eli_dashboard_interface/srv/custom_request.hpp"
+#include "eli_dashboard_interface/srv/get_remote_control.hpp"
+#include "eli_dashboard_interface/srv/get_remote_control_mode.hpp"
+#include "eli_dashboard_interface/srv/set_remote_control.hpp"
 
 namespace ELITE_CS_ROBOT_ROS_DRIVER {
 
@@ -44,6 +47,9 @@ class DashboardClient : public rclcpp::Node {
     rclcpp::Service<eli_common_interface::srv::GetSafetyMode>::SharedPtr safety_mode_service_;
     rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr safety_system_restart_service_;
     rclcpp::Service<eli_dashboard_interface::srv::CustomRequest>::SharedPtr custom_request_service_;
+    rclcpp::Service<eli_dashboard_interface::srv::SetRemoteControl>::SharedPtr set_remote_control_service_;
+    rclcpp::Service<eli_dashboard_interface::srv::GetRemoteControl>::SharedPtr get_remote_control_service_;
+    rclcpp::Service<eli_dashboard_interface::srv::GetRemoteControlMode>::SharedPtr get_remote_control_mode_service_;
 
     ELITE::DashboardClient client_;
     bool is_connected_ = false;
