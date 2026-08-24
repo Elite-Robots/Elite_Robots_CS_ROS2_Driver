@@ -8,25 +8,32 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(angles REQUIRED)
 find_package(controller_interface REQUIRED)
+find_package(generate_parameter_library REQUIRED)
+find_package(hardware_interface REQUIRED)
 find_package(joint_trajectory_controller REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 find_package(pluginlib REQUIRED)
+find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
+find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(realtime_tools REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
-find_package(generate_parameter_library REQUIRED)
 find_package(elite_robots_msgs REQUIRED)
 
 set(
   THIS_PACKAGE_DEPENDENCIES
   angles
   controller_interface
+  generate_parameter_library
+  hardware_interface
   joint_trajectory_controller
   lifecycle_msgs
   pluginlib
+  rclcpp
   rclcpp_lifecycle
+  rcpputils
   rcutils
   realtime_tools
   std_msgs
@@ -107,7 +114,7 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 
-ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
+ament_export_dependencies(${THIS_PACKAGE_DEPENDENCIES})
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
 
