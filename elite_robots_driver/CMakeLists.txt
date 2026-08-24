@@ -7,6 +7,7 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(std_srvs REQUIRED)
@@ -20,15 +21,18 @@ find_package(controller_manager REQUIRED)
 find_package(controller_manager_msgs REQUIRED)
 find_package(backward_ros REQUIRED)
 find_package(elite-cs-series-sdk 1.2.0 REQUIRED)
+find_package(realtime_tools REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(control_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(trajectory_msgs REQUIRED)
 
 set(
   THIS_PACKAGE_DEPENDENCIES
   elite_robots_msgs
   elite_robots_dashboard_msgs
+  geometry_msgs
   hardware_interface
   rclcpp_lifecycle
   pluginlib
@@ -40,6 +44,7 @@ set(
   rclcpp_action
   control_msgs
   sensor_msgs
+  std_msgs
   trajectory_msgs
 )
 
@@ -176,6 +181,7 @@ ament_target_dependencies(
   eli_ros2_control_node
   controller_manager
   rclcpp
+  realtime_tools
 )
 install(
   TARGETS eli_ros2_control_node

@@ -2,6 +2,12 @@
 Changelog for package elite_robots_driver
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.1 (2026-08-24)
+------------------
+* Declare the Elite CS Series SDK dependency.
+* Declare geometry messages, standard messages, realtime tools, and example runtime dependencies explicitly.
+* Contributors: Ivan
+
 1.0.0 (2026-07-29)
 ------------------
 * First public release of the Elite Robots CS ROS 2 driver.
