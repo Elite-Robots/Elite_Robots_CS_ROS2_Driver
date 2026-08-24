@@ -2,6 +2,12 @@
 Changelog for package elite_robots_controllers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.1 (2026-08-24)
+------------------
+* Declare direct controller build and runtime dependencies.
+* Correct the exported dependency list.
+* Contributors: Ivan
+
 1.0.0 (2026-07-29)
 ------------------
 * First public release of the Elite Robots ROS 2 controllers.
