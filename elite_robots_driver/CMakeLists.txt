@@ -20,7 +20,7 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(controller_manager REQUIRED)
 find_package(controller_manager_msgs REQUIRED)
 find_package(backward_ros REQUIRED)
-find_package(elite-cs-series-sdk 1.2.0 REQUIRED)
+find_package(elite_cs_series_sdk 1.2.0 REQUIRED)
 find_package(realtime_tools REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(control_msgs REQUIRED)
@@ -46,14 +46,11 @@ set(
   sensor_msgs
   std_msgs
   trajectory_msgs
+  elite_cs_series_sdk
 )
 
 # Add dashboard client component
 add_library(dashboard_client_component SHARED src/dashboard_client.cpp)
-target_link_libraries(
-  dashboard_client_component
-  elite-cs-series-sdk
-)
 target_include_directories(
   dashboard_client_component
   PRIVATE
@@ -76,10 +73,6 @@ install(
 
 # Add script sender component
 add_library(script_node_component SHARED src/script_node.cpp)
-target_link_libraries(
-  script_node_component
-  elite-cs-series-sdk
-)
 target_include_directories(
   script_node_component
   PRIVATE
@@ -109,7 +102,6 @@ target_link_libraries(
   eli_components_loader
   script_node_component
   dashboard_client_component
-  elite-cs-series-sdk
 )
 target_include_directories(
   eli_components_loader
@@ -127,10 +119,6 @@ add_library(
   eli_cs_hardware_interface_plugin
   SHARED
   src/hardware_interface.cpp
-)
-target_link_libraries(
-  eli_cs_hardware_interface_plugin
-  elite-cs-series-sdk
 )
 target_include_directories(
   eli_cs_hardware_interface_plugin

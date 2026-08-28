@@ -8,7 +8,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(elite-cs-series-sdk 1.1.0 REQUIRED)
+find_package(elite_cs_series_sdk 1.1.0 REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(ament_index_cpp REQUIRED)
@@ -27,12 +27,12 @@ target_include_directories(
 )
 target_link_libraries(
   calibration
-  elite-cs-series-sdk
   ${YAML_CPP_LIBRARIES}
 )
 ament_target_dependencies(calibration
   rclcpp
   ament_index_cpp
+  elite_cs_series_sdk
 )
 
 add_executable(calibration_correction
@@ -44,6 +44,10 @@ target_include_directories(calibration_correction
 )
 target_link_libraries(calibration_correction
   calibration
+)
+ament_target_dependencies(calibration_correction
+  ament_index_cpp
+  elite_cs_series_sdk
 )
 
 install(TARGETS calibration_correction
