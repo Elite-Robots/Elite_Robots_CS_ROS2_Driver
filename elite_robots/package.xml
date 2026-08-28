@@ -16,6 +16,7 @@
   <exec_depend>elite_robots_driver</exec_depend>
   <exec_depend>elite_robots_moveit_config</exec_depend>
   <exec_depend>elite_robots_msgs</exec_depend>
+  <exec_depend>elite_cs_series_sdk</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
