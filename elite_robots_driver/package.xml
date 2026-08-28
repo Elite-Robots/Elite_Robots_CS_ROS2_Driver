@@ -4,7 +4,7 @@
   <name>elite_robots_driver</name>
   <version>1.0.1</version>
   <description>Elite CS series robot ros2 driver</description>
-  <maintainer email="yanxiaojia@elibot.cn">Ivan</maintainer>
+  <maintainer email="yanxiaojia@elibot.cn">Yan</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
