@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>elite_robots</name>
-  <version>1.0.2</version>
+  <version>1.0.3</version>
   <description>Metapackage providing a single installation point for the Elite Robots ROS 2 packages.</description>
 
   <maintainer email="yanxiaojia@elibot.cn">Yan</maintainer>
